@@ -16,15 +16,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem('currentProfile');
-    if (savedProfile) {
-      try {
-        setProfile(JSON.parse(savedProfile));
-      } catch (error) {
-        console.error('Error loading saved profile:', error);
+    const run = async () => {
+      const savedProfile = localStorage.getItem('currentProfile');
+      if (savedProfile) {
+        try {
+          setProfile(JSON.parse(savedProfile));
+        } catch (error) {
+          console.error('Error loading saved profile:', error);
+        }
       }
-    }
-    setLoading(false);
+
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL;
+      const token = localStorage.getItem('authToken') || '';
+
+      if (baseUrl && token) {
+        try {
+          const res = await fetch(`${baseUrl}/api/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          const json = await res.json().catch(() => null);
+          if (res.ok && json?.success && json?.user) {
+            const user = json.user as {
+              id: string;
+              displayName: string;
+              email: string;
+              accessRole?: string;
+              color?: string;
+            };
+
+            const nowIso = new Date().toISOString();
+            const nextProfile: Profile = {
+              id: user.id,
+              name: user.displayName || user.email,
+              color: user.color || 'blue',
+              email: user.email || null,
+              preferences: {},
+              created_at: nowIso,
+              updated_at: nowIso
+            };
+
+            setProfile(nextProfile);
+            localStorage.setItem('currentProfile', JSON.stringify(nextProfile));
+            localStorage.setItem('accessRole', user.accessRole || 'user');
+            localStorage.setItem('userColor', user.color || 'blue');
+          }
+        } catch (e) {
+          console.warn('Auth refresh failed:', e);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    run();
   }, []);
 
   const switchProfile = async (email: string, password: string) => {

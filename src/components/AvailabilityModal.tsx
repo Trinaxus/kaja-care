@@ -146,8 +146,8 @@ export function AvailabilityModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
-        <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
+      <div className="surface rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 surface border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Verfügbarkeit</h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
@@ -229,7 +229,7 @@ export function AvailabilityModal({
                           className={`p-2 rounded transition ${
                             editingId === avail.id
                               ? 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-200'
-                              : 'hover:bg-white/50 dark:hover:bg-slate-800/60'
+                              : 'hover:bg-slate-100/50 dark:hover:bg-slate-800/60'
                           }`}
                           title="Bearbeiten"
                         >
@@ -237,7 +237,7 @@ export function AvailabilityModal({
                         </button>
                         <button
                           onClick={() => handleDelete(avail.id)}
-                          className="p-2 hover:bg-white/50 dark:hover:bg-slate-800/60 rounded transition"
+                          className="p-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/60 rounded transition"
                           title="Löschen"
                         >
                           <Trash2 className="w-4 h-4 text-red-600" />
@@ -320,7 +320,7 @@ export function AvailabilityModal({
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none surface text-slate-900 dark:text-slate-100"
                     required
                   />
                 </div>
@@ -332,7 +332,7 @@ export function AvailabilityModal({
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    className="w-full px-4 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none surface text-slate-900 dark:text-slate-100"
                     required
                   />
                 </div>
@@ -349,7 +349,7 @@ export function AvailabilityModal({
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="z.B. Urlaub, Arzttermin, Geschäftsreise..."
                 rows={3}
-                className="w-full px-4 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none resize-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full px-4 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none resize-none surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
 

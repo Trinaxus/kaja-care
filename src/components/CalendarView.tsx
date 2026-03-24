@@ -696,7 +696,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           <button
             type="button"
             onClick={() => downloadIcs(profiles, { filename: 'kajacare-calendar-all.ics' })}
-            className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+            className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
             title="Export für Google/Apple Kalender (.ics)"
           >
             Export (alles .ics)
@@ -704,7 +704,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           {mode === 'overview' && (
             <>
               {(undoRedo.canUndo || undoRedo.canRedo) && (
-                <div className="flex gap-1 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                <div className="flex gap-1 surface rounded-xl border border-slate-200 dark:border-slate-700 p-1">
                   <button
                     onClick={handleUndo}
                     disabled={!undoRedo.canUndo}
@@ -726,21 +726,21 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
 
               <button
                 onClick={() => setMode('preferences')}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
               >
                 <Heart className="w-4 h-4" />
                 <span className="hidden sm:inline">Wünsche</span>
               </button>
               <button
                 onClick={() => setMode('assign')}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
               >
                 <Check className="w-4 h-4" />
                 <span className="hidden sm:inline">Zuweisen</span>
               </button>
               <button
                 onClick={() => setShowAbsenceModal(true)}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
               >
                 <UserX className="w-4 h-4" />
                 <span className="hidden sm:inline">Abwesenheit</span>
@@ -750,7 +750,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
 
           {mode === 'preferences' && (
             <>
-              <div className="flex gap-1 sm:gap-2 bg-white dark:bg-slate-900/60 rounded-xl p-1.5 sm:p-2 shadow-sm border border-slate-200 dark:border-slate-700">
+              <div className="flex gap-1 sm:gap-2 surface rounded-xl p-1.5 sm:p-2 shadow-sm border border-slate-200 dark:border-slate-700">
                 {(Object.entries(PREFERENCE_CONFIG) as [PreferenceLevel, typeof PREFERENCE_CONFIG[PreferenceLevel]][]).map(([level, config]) => {
                   const Icon = config.icon;
                   return (
@@ -782,7 +782,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                   setMode('overview');
                   setSelectedDays(new Set());
                 }}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
               >
                 <X className="w-4 h-4" />
                 <span className="hidden sm:inline">Abbrechen</span>
@@ -800,7 +800,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl transition-all duration-200 font-medium shadow-sm active:scale-95 text-sm sm:text-base ${
                       selectedCaretaker === profile.id
                         ? `${profileColorClass(profile, 'solid')} shadow-md scale-105`
-                        : 'bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900'
+                        : 'surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900'
                     }`}
                   >
                     {profile.name}
@@ -821,7 +821,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                   setSelectedDays(new Set());
                   setSelectedCaretaker(null);
                 }}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
               >
                 <X className="w-4 h-4" />
                 Abbrechen
@@ -831,8 +831,8 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
-        <div className="grid grid-cols-7 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950/40 dark:to-slate-900/30 border-b border-slate-200/50 dark:border-slate-700/50">
+      <div className="surface rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-800/60 overflow-hidden">
+        <div className="grid grid-cols-7 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-950 border-b border-slate-200/50 dark:border-slate-800/60">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
             <div key={day} className="px-3 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {day}
@@ -850,9 +850,9 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
             const hasAbsence = day.absences.length > 0;
 
             const getTileBackgroundClass = () => {
-              if (!isCurrentMonth(day.date)) return 'bg-slate-50/50 opacity-30 dark:bg-slate-950/20 dark:opacity-30';
-              if (isSelected) return 'bg-blue-50 ring-2 ring-inset ring-blue-500 shadow-inner scale-[0.98] dark:bg-blue-950/30';
-              if (day.hasConflict) return 'ring-2 ring-inset ring-red-400 bg-red-50 dark:bg-red-950/25';
+              if (!isCurrentMonth(day.date)) return 'bg-slate-50/50 opacity-30 dark:bg-slate-950/30 dark:opacity-30';
+              if (isSelected) return 'bg-blue-50 ring-2 ring-inset ring-blue-500 shadow-inner scale-[0.98] dark:bg-blue-950/40';
+              if (day.hasConflict) return 'ring-2 ring-inset ring-red-400 bg-red-50 dark:bg-red-950/30';
 
               if (day.handover) {
                 return 'hover:shadow-sm';
@@ -861,8 +861,8 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
               if (caretaker) {
                 return profileColorClass(caretaker, 'tile');
               }
-              if (new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6) return 'bg-slate-50/50 dark:bg-slate-950/25';
-              return 'bg-white hover:bg-slate-50 hover:shadow-sm dark:bg-slate-950/10 dark:hover:bg-slate-900/40';
+              if (new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6) return 'bg-slate-50/50 dark:bg-slate-950/30';
+              return 'surface hover:bg-slate-50 hover:shadow-sm dark:hover:bg-slate-900/60';
             };
 
             return (
@@ -927,17 +927,17 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                 })()}
                 <div className="flex items-start justify-between mb-2 relative z-10">
                   <span className={`text-sm font-semibold relative z-10 ${
-                    !isCurrentMonth(day.date) ? 'text-slate-400' :
-                    new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'text-slate-500' :
-                    'text-slate-700'
+                    !isCurrentMonth(day.date) ? 'text-slate-400 dark:text-slate-500' :
+                    new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'text-slate-500 dark:text-slate-400' :
+                    'text-slate-700 dark:text-slate-200'
                   }`}>
                     {new Date(day.date).getDate()}
                   </span>
                   <div className="flex gap-1.5 flex-wrap justify-end relative z-10">
-                    {day.hasImportantNotes && <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-3 h-3 text-red-600" /></div>}
-                    {day.hasNotes && !day.hasImportantNotes && <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-3 h-3 text-blue-600" /></div>}
-                    {day.handover && <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-3 h-3 text-orange-600" /></div>}
-                    {day.events.length > 0 && <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-3 h-3 text-blue-600" /></div>}
+                    {day.hasImportantNotes && <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-3 h-3 text-red-600 dark:text-red-200" /></div>}
+                    {day.hasNotes && !day.hasImportantNotes && <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-3 h-3 text-blue-600 dark:text-blue-200" /></div>}
+                    {day.handover && <div className="w-5 h-5 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-3 h-3 text-orange-600 dark:text-orange-200" /></div>}
+                    {day.events.length > 0 && <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-3 h-3 text-blue-600 dark:text-blue-200" /></div>}
                   </div>
                 </div>
 

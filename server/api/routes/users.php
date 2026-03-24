@@ -35,6 +35,7 @@ foreach (($store['users'] ?? []) as $user) {
         'email' => (string) ($user['email'] ?? ''),
         'displayName' => (string) (($user['displayName'] ?? '') !== '' ? $user['displayName'] : ($user['email'] ?? '')),
         'color' => (string) (($user['color'] ?? '') !== '' ? $user['color'] : 'blue'),
+        'preferences' => (isset($user['preferences']) && is_array($user['preferences'])) ? $user['preferences'] : new stdClass(),
     ];
 }
 

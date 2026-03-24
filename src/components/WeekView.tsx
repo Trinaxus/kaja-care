@@ -144,7 +144,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
         <div className="flex items-center gap-3">
           <button
             onClick={previousWeek}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/40"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
           >
             <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
           </button>
@@ -156,7 +156,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
           </div>
           <button
             onClick={nextWeek}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/40"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
           >
             <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
           </button>
@@ -186,7 +186,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
               onClick={() => setSelectedDate(day.date)}
               className={`
                 relative min-h-[220px] rounded-2xl p-4 cursor-pointer transition-all duration-200 border-2 card-hover
-                ${isWeekend ? 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/40 dark:to-slate-900/30' : 'bg-white dark:bg-slate-900/40'}
+                ${isWeekend ? 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/50 dark:to-slate-900/40' : 'surface'}
                 ${isToday ? 'border-blue-500 shadow-xl shadow-blue-500/20' : 'border-slate-200 dark:border-slate-700'}
                 ${day.hasConflict ? 'border-red-400' : ''}
               `}
@@ -260,8 +260,8 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
                   </div>
                 </div>
               ) : (
-                <div className="mb-3 p-3 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300">
-                  <div className="text-xs text-slate-500 text-center font-medium">Noch nicht eingeteilt</div>
+                <div className="mb-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-900/40 border-2 border-dashed border-slate-300 dark:border-slate-600">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 text-center font-medium">Noch nicht eingeteilt</div>
                 </div>
               )}
 
@@ -290,22 +290,22 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
 
               {day.events.length > 0 && (
                 <div className="space-y-1">
-                  {day.events.slice(0, 2).map((event, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5 text-xs text-slate-700 truncate">
+                  {day.events.slice(0, 2).map((event) => (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 truncate">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
                       <span className="truncate font-medium">{event.title}</span>
                     </div>
                   ))}
                   {day.events.length > 2 && (
-                    <div className="text-xs text-slate-500 font-medium">+{day.events.length - 2} weitere</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">+{day.events.length - 2} weitere</div>
                   )}
                 </div>
               )}
 
               {day.hasNotes && !day.hasImportantNotes && (
                 <div className="absolute bottom-3 right-3">
-                  <div className="p-1.5 rounded-lg bg-yellow-100">
-                    <StickyNote className="w-3.5 h-3.5 text-yellow-600" />
+                  <div className="p-1.5 rounded-lg bg-yellow-100 dark:bg-yellow-950/35">
+                    <StickyNote className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-200" />
                   </div>
                 </div>
               )}

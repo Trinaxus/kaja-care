@@ -322,15 +322,15 @@ export function EnhancedCalendarView({ profiles, currentProfile, onUpdate }: Enh
             >
               {handover ? (
                 <div className="absolute inset-0 flex">
-                  <div className={`w-1/2 ${fromCaretaker?.color === 'blue' ? 'bg-blue-50' : 'bg-green-50'}`}></div>
-                  <div className={`w-1/2 ${toCaretaker?.color === 'blue' ? 'bg-blue-50' : 'bg-green-50'}`}></div>
+                  <div className={`w-1/2 ${fromCaretaker?.color === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30' : 'bg-green-50 dark:bg-green-950/30'}`}></div>
+                  <div className={`w-1/2 ${toCaretaker?.color === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30' : 'bg-green-50 dark:bg-green-950/30'}`}></div>
                 </div>
               ) : (
                 <div className={`absolute inset-0 ${
-                  isSelected ? 'bg-blue-50' :
-                  caretaker?.color === 'blue' ? 'bg-blue-50' :
-                  caretaker?.color === 'green' ? 'bg-green-50' :
-                  'bg-white'
+                  isSelected ? 'bg-blue-50 dark:bg-blue-950/30' :
+                  caretaker?.color === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30' :
+                  caretaker?.color === 'green' ? 'bg-green-50 dark:bg-green-950/30' :
+                  'surface'
                 }`}></div>
               )}
 

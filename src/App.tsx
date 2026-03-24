@@ -1,7 +1,7 @@
 import { useAuth } from './contexts/AuthContext';
 import { ProfileSelector } from './components/ProfileSelector';
 import { LoadingState } from './components/ui/LoadingSpinner';
-import { EnhancedDashboardServer } from './components/EnhancedDashboardServer';
+import { EnhancedDashboard } from './components/EnhancedDashboard';
 
 function App() {
   const { profile, loading, switchProfile, signOut } = useAuth();
@@ -19,7 +19,7 @@ function App() {
   }
 
   return (
-    <EnhancedDashboardServer currentProfile={profile} onSignOut={signOut} />
+    <EnhancedDashboard currentProfile={profile} onSwitchProfile={signOut} />
   );
 }
 

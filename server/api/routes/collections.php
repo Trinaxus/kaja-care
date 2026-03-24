@@ -23,6 +23,7 @@ $allowed = [
     'requests',
     'expenses',
     'logbook_entries',
+    'profile_settings',
 ];
 
 if ($name === '' || !in_array($name, $allowed, true)) {

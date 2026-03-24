@@ -172,25 +172,25 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-xl font-bold text-slate-900">Einstellungen</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="surface rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+        <div className="sticky top-0 surface border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Einstellungen</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center transition"
+            className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition"
           >
-            <X className="w-5 h-5 text-slate-600" />
+            <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
 
-        <div className="flex border-b border-slate-200">
+        <div className="flex border-b border-slate-200 dark:border-slate-700">
           <button
             onClick={() => setActiveTab('profile')}
             className={`flex-1 px-6 py-3 font-medium transition ${
               activeTab === 'profile'
                 ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <User className="w-4 h-4 inline-block mr-2" />
@@ -201,7 +201,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
             className={`flex-1 px-6 py-3 font-medium transition ${
               activeTab === 'password'
                 ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Lock className="w-4 h-4 inline-block mr-2" />
@@ -212,7 +212,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
             className={`flex-1 px-6 py-3 font-medium transition ${
               activeTab === 'preferences'
                 ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Bell className="w-4 h-4 inline-block mr-2" />
@@ -222,21 +222,21 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
         <div className="p-6 space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-lg p-4">
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
           {successMessage && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-green-800">{successMessage}</p>
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900/50 rounded-lg p-4">
+              <p className="text-sm text-green-800 dark:text-green-200">{successMessage}</p>
             </div>
           )}
 
           {activeTab === 'profile' && (
             <>
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <User className="w-4 h-4" />
                   Name
                 </label>
@@ -245,12 +245,12 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Dein Name"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition surface text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <Mail className="w-4 h-4" />
                   E-Mail
                 </label>
@@ -259,12 +259,12 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="deine@email.de"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition surface text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <Palette className="w-4 h-4" />
                   Farbe
                 </label>
@@ -279,7 +279,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                       title={option.label}
                     >
                       {color === option.value && (
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-6 h-6 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
                           <div className="w-2 h-2 bg-slate-900 rounded-full"></div>
                         </div>
                       )}
@@ -291,16 +291,16 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-slate-900 mb-2">Vorschau</h3>
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="bg-slate-50 dark:bg-slate-900/40 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">Vorschau</h3>
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 ${COLOR_OPTIONS.find(c => c.value === color)?.bgClass || 'bg-slate-500'} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
                       {name.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">{name || 'Dein Name'}</p>
-                      <p className="text-sm text-slate-600">{email || 'Keine E-Mail'}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{name || 'Dein Name'}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{email || 'Keine E-Mail'}</p>
                     </div>
                   </div>
                 </div>
@@ -310,14 +310,14 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
           {activeTab === 'password' && (
             <>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-lg p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
                   Ändere hier dein Passwort. Das neue Passwort muss mindestens 6 Zeichen lang sein.
                 </p>
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <Lock className="w-4 h-4" />
                   Aktuelles Passwort
                 </label>
@@ -327,12 +327,12 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition surface text-slate-900 dark:text-slate-100"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -340,7 +340,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <Lock className="w-4 h-4" />
                   Neues Passwort
                 </label>
@@ -350,12 +350,12 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition surface text-slate-900 dark:text-slate-100"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -363,7 +363,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                   <Lock className="w-4 h-4" />
                   Passwort bestätigen
                 </label>
@@ -373,12 +373,12 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition surface text-slate-900 dark:text-slate-100"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -389,17 +389,17 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
           {activeTab === 'preferences' && (
             <>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-lg p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
                   Wähle, welche Benachrichtigungen du erhalten möchtest.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
-                    <p className="font-medium text-slate-900">E-Mail Benachrichtigungen</p>
-                    <p className="text-sm text-slate-600">Erhalte Updates per E-Mail</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">E-Mail Benachrichtigungen</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Erhalte Updates per E-Mail</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -408,11 +408,11 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                       onChange={(e) => setNotificationPrefs({ ...notificationPrefs, email: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white dark:peer-checked:after:border-slate-800 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white dark:after:bg-slate-800 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
                     <p className="font-medium text-slate-900">Neue Anfragen</p>
                     <p className="text-sm text-slate-600">Bei neuen Tausch-Anfragen</p>
@@ -424,11 +424,11 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                       onChange={(e) => setNotificationPrefs({ ...notificationPrefs, requests: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white dark:peer-checked:after:border-slate-800 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white dark:after:bg-slate-800 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
                     <p className="font-medium text-slate-900">Übergaben</p>
                     <p className="text-sm text-slate-600">Bei Änderungen an Übergaben</p>
@@ -440,11 +440,11 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                       onChange={(e) => setNotificationPrefs({ ...notificationPrefs, handovers: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white dark:peer-checked:after:border-slate-800 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white dark:after:bg-slate-800 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
                     <p className="font-medium text-slate-900">Neue Zuteilungen</p>
                     <p className="text-sm text-slate-600">Bei neuen Betreuungstagen</p>
@@ -456,7 +456,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
                       onChange={(e) => setNotificationPrefs({ ...notificationPrefs, assignments: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white dark:peer-checked:after:border-slate-800 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white dark:after:bg-slate-800 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               </div>
@@ -464,10 +464,10 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex gap-3 rounded-b-2xl">
+        <div className="sticky bottom-0 surface border-t border-slate-200 dark:border-slate-700 px-6 py-4 flex gap-3 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition"
+            className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 font-medium transition"
           >
             Abbrechen
           </button>

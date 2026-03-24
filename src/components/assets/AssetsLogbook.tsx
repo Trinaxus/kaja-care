@@ -84,18 +84,18 @@ export function AssetsLogbook() {
         </div>
       </div>
 
-      {status === 'loading' && <div className="text-slate-600">Lade Logbook…</div>}
-      {status === 'error' && <div className="text-red-700 font-medium">{error}</div>}
-      {error && status === 'ready' && <div className="text-red-700 font-medium">{error}</div>}
+      {status === 'loading' && <div className="text-slate-600 dark:text-slate-300">Lade Logbook…</div>}
+      {status === 'error' && <div className="text-red-700 dark:text-red-300 font-medium">{error}</div>}
+      {error && status === 'ready' && <div className="text-red-700 dark:text-red-300 font-medium">{error}</div>}
 
       <div className="space-y-3">
         {items.length === 0 ? (
-          <div className="text-slate-600">Noch keine Einträge.</div>
+          <div className="text-slate-600 dark:text-slate-300">Noch keine Einträge.</div>
         ) : (
           items.map((it) => (
-            <div key={it.id} className="bg-white/60 border border-white/40 rounded-2xl p-4">
-              <div className="text-xs text-slate-500 mb-2">{new Date(it.createdAt).toLocaleString()}</div>
-              <div className="text-slate-900 whitespace-pre-wrap">{it.text}</div>
+            <div key={it.id} className="surface rounded-2xl p-4">
+              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">{new Date(it.createdAt).toLocaleString()}</div>
+              <div className="text-slate-900 dark:text-slate-100 whitespace-pre-wrap">{it.text}</div>
             </div>
           ))
         )}

@@ -10,7 +10,8 @@ export type CollectionName =
   | 'messages'
   | 'requests'
   | 'expenses'
-  | 'logbook_entries';
+  | 'logbook_entries'
+  | 'profile_settings';
 
 export type CollectionFilter = Record<string, string | number | boolean | Array<string | number | boolean>>;
 

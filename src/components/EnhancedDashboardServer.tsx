@@ -417,7 +417,7 @@ export function EnhancedDashboardServer({ currentProfile, onSignOut }: EnhancedD
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="mb-4">
-          <div className="flex flex-wrap gap-1 p-1 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/50 backdrop-blur shadow-sm">
+          <div className="flex flex-wrap gap-1 p-1 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 surface backdrop-blur shadow-sm">
             {navItems.map((item) => {
               const Icon = item.icon;
               const selected = activeView === item.id;
@@ -428,8 +428,8 @@ export function EnhancedDashboardServer({ currentProfile, onSignOut }: EnhancedD
                   onClick={() => setActiveView(item.id)}
                   className={
                     selected
-                      ? 'px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold shadow-sm border border-slate-200/70 dark:border-slate-700/60 transition active:scale-[0.98]'
-                      : 'px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-semibold transition hover:bg-white/60 dark:hover:bg-slate-800/60 active:scale-[0.98]'
+                      ? 'px-4 py-2.5 rounded-xl surface text-slate-900 dark:text-slate-100 font-semibold shadow-sm border border-slate-200/70 dark:border-slate-700/60 transition active:scale-[0.98]'
+                      : 'px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-semibold transition hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.98]'
                   }
                 >
                   <span className="inline-flex items-center gap-2">
@@ -450,13 +450,13 @@ export function EnhancedDashboardServer({ currentProfile, onSignOut }: EnhancedD
                   <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">Kalenderansicht</h2>
                   {calendarMode === 'month' && ringSegments.length > 0 && (
                     <div className="relative group">
-                      <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-white/60 dark:bg-slate-950/20">
+                      <div className="w-11 h-11 flex items-center justify-center rounded-xl surface">
                         <Donut segments={ringSegments} />
                       </div>
 
                       {ringBreakdown.length > 0 && (
                         <div className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                          <div className="min-w-[160px] rounded-xl border border-slate-200/70 dark:border-slate-700/70 bg-white/95 dark:bg-slate-900/95 shadow-lg px-3 py-2">
+                          <div className="min-w-[160px] rounded-xl border border-slate-200/70 dark:border-slate-700/70 surface shadow-lg px-3 py-2">
                             <div className="space-y-1">
                               {ringBreakdown.map((x) => (
                                 <div key={x.id} className="flex items-center justify-between gap-3">
@@ -479,8 +479,8 @@ export function EnhancedDashboardServer({ currentProfile, onSignOut }: EnhancedD
                     onClick={() => setCalendarMode('month')}
                     className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                       calendarMode === 'month'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-md'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                        ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                        : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     Monat
@@ -489,8 +489,8 @@ export function EnhancedDashboardServer({ currentProfile, onSignOut }: EnhancedD
                     onClick={() => setCalendarMode('week')}
                     className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                       calendarMode === 'week'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-md'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                        ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                        : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     Woche
@@ -499,8 +499,8 @@ export function EnhancedDashboardServer({ currentProfile, onSignOut }: EnhancedD
                     onClick={() => setCalendarMode('day')}
                     className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                       calendarMode === 'day'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-md'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                        ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                        : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                     }`}
                   >
                     Tag

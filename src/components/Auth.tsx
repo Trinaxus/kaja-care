@@ -24,20 +24,20 @@ export function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-3 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8">
+        <div className="surface rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-green-500 rounded-full mb-3 sm:mb-4">
               <PawPrint className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">KajaCare</h1>
-            <p className="text-sm sm:text-base text-slate-600">Gemeinsame Hundebetreuung für Martin & Lisa</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">KajaCare</h1>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">Gemeinsame Hundebetreuung für Martin & Lisa</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
                 Profil auswählen
               </label>
               <div className="flex gap-3">
@@ -46,44 +46,44 @@ export function Auth() {
                   onClick={() => setSelectedProfile('Lisa')}
                   className={`flex-1 py-4 rounded-xl border-2 transition ${
                     selectedProfile === 'Lisa'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-slate-300 hover:border-green-300'
+                      ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+                      : 'border-slate-300 dark:border-slate-600 hover:border-green-300 dark:hover:border-green-600'
                   }`}
                 >
                   <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <span className="text-sm font-medium text-slate-700">Lisa</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Lisa</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedProfile('Martin')}
                   className={`flex-1 py-4 rounded-xl border-2 transition ${
                     selectedProfile === 'Martin'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-300 hover:border-blue-300'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                      : 'border-slate-300 dark:border-slate-600 hover:border-blue-300 dark:hover:border-blue-600'
                   }`}
                 >
                   <div className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2"></div>
-                  <span className="text-sm font-medium text-slate-700">Martin</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Martin</span>
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Passwort
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="••••••••"
+                placeholder="Passwort eingeben"
+                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition surface text-slate-900 dark:text-slate-100"
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
             )}

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Profile, CareAssignment, Handover, Request } from '../lib/database.types';
+import type { Profile, CareAssignment, Handover, Request, Message, CareDayPreference, CareDayNote, CareDayEvent } from '../lib/database.types';
+import type { LucideIcon } from 'lucide-react';
+import { fetchUsers } from '../api/users';
+import { listItems } from '../api/collections';
 import {
   PawPrint,
   Calendar,
@@ -11,16 +13,17 @@ import {
   TrendingUp,
   MessageSquare,
   Settings,
-  Sparkles,
-  ChevronRight,
-  Heart,
   DollarSign,
   AlertCircle,
   CalendarPlus,
   Send,
   Users,
   Clock,
-  Target
+  Target,
+  Sun,
+  Moon,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { CalendarView } from './CalendarView';
 import { WeekView } from './WeekView';
@@ -29,7 +32,6 @@ import { LogBook } from './LogBook';
 import { NotificationsPanel } from './NotificationsPanel';
 import { ProfileSettings } from './ProfileSettings';
 import { ExpenseTracker } from './ExpenseTracker';
-import { StatCard } from './ui/StatCard';
 import { LoadingState } from './ui/LoadingSpinner';
 import { useToast } from '../hooks/useToast';
 import { Toast } from './ui/Toast';
@@ -41,6 +43,7 @@ interface DashboardProps {
 
 export function EnhancedDashboard({ currentProfile, onSwitchProfile }: DashboardProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [effectiveCurrentProfile, setEffectiveCurrentProfile] = useState<Profile | null>(null);
   const [todayAssignment, setTodayAssignment] = useState<CareAssignment | null>(null);
   const [nextHandover, setNextHandover] = useState<Handover | null>(null);
   const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
@@ -53,7 +56,36 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
   const [selectedHandoverDate, setSelectedHandoverDate] = useState<string | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [newLogbookCount, setNewLogbookCount] = useState(0);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
+  const [loadError, setLoadError] = useState<string>('');
   const toast = useToast();
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  };
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenEnabled) {
+        return;
+      }
+
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+        return;
+      }
+
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } catch {
+      return;
+    }
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -68,61 +100,96 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
+      setLoadError('');
       const today = new Date().toISOString().split('T')[0];
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      const [profilesRes, todayRes, requestsRes, todayHandoverRes] = await Promise.all([
-        supabase.from('profiles').select('*'),
-        supabase.from('care_assignments').select('*').eq('date', today).maybeSingle(),
-        supabase.from('requests').select('*').eq('status', 'pending'),
-        supabase.from('handovers').select('*').eq('date', today).maybeSingle(),
+      const [users, requests, todayAssignments, todayHandovers] = await Promise.all([
+        fetchUsers(),
+        listItems<Request>('requests'),
+        listItems<CareAssignment>('care_assignments', { date: today }),
+        listItems<Handover>('handovers', { date: today })
       ]);
 
-      if (profilesRes.data) setProfiles(profilesRes.data);
+      const nextProfiles: Profile[] = users.map((u) => {
+        const nowIso = new Date().toISOString();
+        return {
+          id: u.id,
+          name: u.displayName || u.email,
+          email: u.email || null,
+          color: u.color || 'blue',
+          preferences: {},
+          created_at: nowIso,
+          updated_at: nowIso
+        };
+      });
+      setProfiles(nextProfiles);
 
-      if (todayHandoverRes.data && todayHandoverRes.data.time && currentTime >= todayHandoverRes.data.time) {
-        if (todayRes.data) {
-          const handover = todayHandoverRes.data;
-          const otherProfile = profilesRes.data?.find(p => p.id !== todayRes.data.caretaker_id);
+      const resolved =
+        nextProfiles.find((p) => p.id === currentProfile.id) ||
+        nextProfiles.find((p) => (p.email || '').toLowerCase() === String(currentProfile.email || '').toLowerCase()) ||
+        nextProfiles.find((p) => String(p.name || '').trim().toLowerCase() === String(currentProfile.name || '').trim().toLowerCase()) ||
+        null;
 
+      const nextCanonical = resolved ? { ...currentProfile, ...resolved } : currentProfile;
+      setEffectiveCurrentProfile(nextCanonical);
+
+      // Keep AuthContext/localStorage in sync so all panels filter by the same canonical id
+      // (important when imported collections use UUIDs but an older local profile used numeric ids).
+      try {
+        const currentStoredRaw = localStorage.getItem('currentProfile') || '';
+        const currentStored = currentStoredRaw ? JSON.parse(currentStoredRaw) : null;
+        const storedId = currentStored && typeof currentStored === 'object' ? String(currentStored.id || '') : '';
+        if (storedId !== String(nextCanonical.id || '')) {
+          localStorage.setItem('currentProfile', JSON.stringify(nextCanonical));
+        }
+      } catch {
+        localStorage.setItem('currentProfile', JSON.stringify(nextCanonical));
+      }
+
+      const todayAssignmentRow = todayAssignments.length > 0 ? todayAssignments[0] : null;
+      const todayHandoverRow = todayHandovers.length > 0 ? todayHandovers[0] : null;
+
+      if (todayHandoverRow && todayHandoverRow.time && currentTime >= todayHandoverRow.time) {
+        if (todayAssignmentRow) {
+          const otherProfile = nextProfiles.find((p) => p.id !== todayAssignmentRow.caretaker_id);
           if (otherProfile) {
-            const updatedAssignment = { ...todayRes.data, caretaker_id: otherProfile.id };
-            setTodayAssignment(updatedAssignment);
+            setTodayAssignment({ ...todayAssignmentRow, caretaker_id: otherProfile.id });
           } else {
-            setTodayAssignment(todayRes.data);
+            setTodayAssignment(todayAssignmentRow);
           }
         } else {
           setTodayAssignment(null);
         }
       } else {
-        if (todayRes.data) setTodayAssignment(todayRes.data);
+        setTodayAssignment(todayAssignmentRow);
       }
 
-      if (requestsRes.data) setPendingRequests(requestsRes.data);
+      setPendingRequests(requests.filter((r) => r.status === 'pending'));
 
-      const { data: allHandovers } = await supabase
-        .from('handovers')
-        .select('*')
-        .gte('date', today)
-        .order('date', { ascending: true })
-        .order('time', { ascending: true });
+      const allHandovers = await listItems<Handover>('handovers');
+      const candidateHandovers = allHandovers
+        .filter((h) => (h.date || '') >= today)
+        .sort((a, b) => {
+          const adt = `${a.date || ''}T${a.time || '00:00'}`;
+          const bdt = `${b.date || ''}T${b.time || '00:00'}`;
+          return adt.localeCompare(bdt);
+        });
 
-      let nextHandoverData = null;
-      if (allHandovers && allHandovers.length > 0) {
-        for (const handover of allHandovers) {
-          if (handover.date > today) {
-            nextHandoverData = handover;
-            break;
-          }
-          if (handover.date === today && handover.time && handover.time > currentTime) {
-            nextHandoverData = handover;
-            break;
-          }
+      let nextHandoverData: Handover | null = null;
+      for (const handover of candidateHandovers) {
+        if ((handover.date || '') > today) {
+          nextHandoverData = handover;
+          break;
         }
-        if (!nextHandoverData) {
-          nextHandoverData = allHandovers.find(h => h.date > today) || null;
+        if ((handover.date || '') === today && handover.time && handover.time > currentTime) {
+          nextHandoverData = handover;
+          break;
         }
+      }
+      if (!nextHandoverData) {
+        nextHandoverData = candidateHandovers.find((h) => (h.date || '') > today) || null;
       }
 
       setNextHandover(nextHandoverData);
@@ -133,28 +200,30 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
         return date.toISOString().split('T')[0];
       });
 
-      const { data: assignments } = await supabase
-        .from('care_assignments')
-        .select('date')
-        .in('date', next14Days);
-
-      const assignedDates = new Set(assignments?.map(a => a.date) || []);
+      const assignments = await listItems<CareAssignment>('care_assignments', { date: next14Days });
+      const assignedDates = new Set(assignments.map((a) => a.date));
       setUnplannedDays(next14Days.filter(d => !assignedDates.has(d)).length);
 
-      const { data: unreadMessages } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('read', false);
-      setUnreadMessagesCount(unreadMessages?.length || 0);
+      const allMessages = await listItems<Message>('messages');
+      const canonicalId = resolved?.id || currentProfile.id;
+      const myUnread = allMessages.filter((m) => m.to_profile_id === canonicalId && !m.is_read);
+      setUnreadMessagesCount(myUnread.length);
 
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-      const { data: recentLogbook } = await supabase
-        .from('logbook_entries')
-        .select('id')
-        .gte('created_at', oneDayAgo.toISOString());
-      setNewLogbookCount(recentLogbook?.length || 0);
+
+      const [notes, events] = await Promise.all([
+        listItems<CareDayNote>('care_day_notes'),
+        listItems<CareDayEvent>('care_day_events')
+      ]);
+
+      const recentNotes = notes.filter((n) => String(n.created_at || '') >= oneDayAgo.toISOString());
+      const recentEvents = events.filter((e) => String(e.created_at || '') >= oneDayAgo.toISOString());
+
+      setNewLogbookCount(recentNotes.length + recentEvents.length);
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      setLoadError(msg);
       toast.error('Fehler beim Laden der Daten');
     } finally {
       setIsLoading(false);
@@ -166,37 +235,46 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
     const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
     const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
-    const { data: assignments } = await supabase
-      .from('care_assignments')
-      .select('caretaker_id, date')
-      .gte('date', startOfMonth.toISOString().split('T')[0])
-      .lte('date', endOfMonth.toISOString().split('T')[0]);
+    const monthDates: string[] = [];
+    const cur = new Date(startOfMonth);
+    while (cur <= endOfMonth) {
+      monthDates.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
 
-    if (!assignments || assignments.length === 0) {
+    let assignments: CareAssignment[] = [];
+    try {
+      assignments = await listItems<CareAssignment>('care_assignments', { date: monthDates });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      setLoadError(msg);
       setCareStats({ martin: 0, lisa: 0, fairness: 100, preferenceScore: 0 });
       return;
     }
 
-    const martinProfile = profiles.find(p => p.name === 'Martin');
-    const lisaProfile = profiles.find(p => p.name === 'Lisa');
+    if (assignments.length === 0) {
+      setCareStats({ martin: 0, lisa: 0, fairness: 100, preferenceScore: 0 });
+      return;
+    }
 
-    const martinDays = assignments.filter(a => a.caretaker_id === martinProfile?.id).length;
-    const lisaDays = assignments.filter(a => a.caretaker_id === lisaProfile?.id).length;
+    const [fallbackA, fallbackB] = profiles;
+    const martinProfile = profiles.find((p) => p.name === 'Martin') || fallbackA;
+    const lisaProfile = profiles.find((p) => p.name === 'Lisa') || fallbackB;
+
+    const martinDays = assignments.filter((a) => a.caretaker_id === martinProfile?.id).length;
+    const lisaDays = assignments.filter((a) => a.caretaker_id === lisaProfile?.id).length;
 
     const total = martinDays + lisaDays;
     const fairness = total > 0
       ? Math.round(100 - (Math.abs(martinDays - lisaDays) / total) * 100)
       : 100;
 
-    const { data: preferences } = await supabase
-      .from('care_day_preferences')
-      .select('date, preference_level')
-      .in('date', assignments.map(a => a.date));
+    const preferences = await listItems<CareDayPreference>('care_day_preferences', { date: assignments.map((a) => a.date) });
 
     let preferenceMatches = 0;
-    if (preferences && preferences.length > 0) {
-      assignments.forEach(assignment => {
-        const pref = preferences.find(p => p.date === assignment.date);
+    if (preferences.length > 0) {
+      assignments.forEach((assignment) => {
+        const pref = preferences.find((p) => p.date === assignment.date);
         if (pref && (pref.preference_level === 'very_happy' || pref.preference_level === 'nice')) {
           preferenceMatches++;
         }
@@ -208,29 +286,48 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
     }
   };
 
-  const getProfileById = (id: string) => profiles.find(p => p.id === id);
-  const todayCaretaker = todayAssignment ? getProfileById(todayAssignment.caretaker_id) : null;
-  const otherProfile = profiles.find(p => p.id !== currentProfile?.id);
+  const getProfileById = (id: string) => {
+    const raw = String(id ?? '');
+    const direct = profiles.find((p) => String(p.id) === raw);
+    if (direct) return direct;
 
-  const navItems = [
+    // Legacy/alternate ids seen in imports (e.g. numeric ids like 35/50)
+    const legacyName = raw === '35' ? 'Martin' : raw === '50' ? 'Lisa' : '';
+    if (legacyName) {
+      const byName = profiles.find((p) => String(p.name || '').trim().toLowerCase() === legacyName.toLowerCase());
+      if (byName) return byName;
+    }
+
+    return undefined;
+  };
+  const canonicalProfile = effectiveCurrentProfile || currentProfile;
+  const todayCaretaker = todayAssignment ? getProfileById(todayAssignment.caretaker_id) : null;
+  const otherProfile = profiles.find(p => p.id !== canonicalProfile?.id);
+
+  type NavItem = { id: 'calendar' | 'requests' | 'expenses' | 'logbook' | 'notifications'; label: string; icon: LucideIcon; badge?: number };
+
+  const navItems: NavItem[] = [
     { id: 'calendar', label: 'Kalender', icon: Calendar },
     { id: 'requests', label: 'Anfragen', icon: Bell, badge: pendingRequests.length },
     { id: 'expenses', label: 'Ausgaben', icon: DollarSign },
     { id: 'logbook', label: 'Logbuch', icon: BookOpen, badge: newLogbookCount },
     { id: 'notifications', label: 'Nachrichten', icon: MessageSquare, badge: unreadMessagesCount },
-  ] as const;
+  ];
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 flex items-center justify-center">
         <LoadingState message="Lade Dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/30">
-      <header className="glass-effect sticky top-0 z-40 border-b border-slate-200/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-cyan-50/30 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+      <div className="pointer-events-none fixed inset-0 -z-10 opacity-0 dark:opacity-100 transition-opacity duration-500">
+        <div className="absolute inset-0 bg-[radial-gradient(80rem_80rem_at_20%_10%,rgba(34,211,238,0.12),transparent_55%),radial-gradient(70rem_70rem_at_80%_30%,rgba(59,130,246,0.10),transparent_60%),radial-gradient(60rem_60rem_at_50%_90%,rgba(168,85,247,0.10),transparent_55%)]" />
+      </div>
+      <header className="glass-effect sticky top-0 z-40 border-b border-slate-200/50 dark:border-slate-800/60">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -242,21 +339,43 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                   KajaCare
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
-                  Willkommen, {currentProfile?.name}
+                  Willkommen, {canonicalProfile?.name}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <button
+                onClick={toggleTheme}
+                className="p-2 sm:p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg sm:rounded-xl transition-all duration-200 group"
+                title={isDark ? 'Light Mode' : 'Dark Mode'}
+              >
+                {isDark ? (
+                  <Sun className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
+                ) : (
+                  <Moon className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
+                )}
+              </button>
+              <button
+                onClick={toggleFullscreen}
+                className="p-2 sm:p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg sm:rounded-xl transition-all duration-200 group"
+                title={isFullscreen ? 'Fullscreen verlassen' : 'Fullscreen'}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
+                ) : (
+                  <Maximize2 className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
+                )}
+              </button>
+              <button
                 onClick={() => setShowProfileSettings(true)}
-                className="p-2 sm:p-3 hover:bg-slate-100 rounded-lg sm:rounded-xl transition-all duration-200 group"
+                className="p-2 sm:p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg sm:rounded-xl transition-all duration-200 group"
                 title="Einstellungen"
               >
-                <Settings className="w-5 h-5 text-slate-600 group-hover:text-slate-900 group-hover:rotate-90 transition-all duration-300" />
+                <Settings className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 group-hover:rotate-90 transition-all duration-300" />
               </button>
               <button
                 onClick={onSwitchProfile}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg sm:rounded-xl transition-all duration-200 font-medium text-slate-700 text-sm sm:text-base"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/60 dark:hover:bg-slate-900 rounded-lg sm:rounded-xl transition-all duration-200 font-medium text-slate-700 dark:text-slate-100 text-sm sm:text-base"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Wechseln</span>
@@ -267,8 +386,13 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
       </header>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+            {loadError}
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 hover:shadow-md transition-shadow">
+          <div className="surface rounded-xl shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
               <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
                 todayCaretaker?.color === 'blue' ? 'bg-blue-100' :
@@ -281,7 +405,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-500 uppercase font-medium tracking-wide">Kaja ist heute bei</p>
-                <p className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
                   {todayCaretaker?.name || 'Ungeplant'}
                 </p>
               </div>
@@ -297,15 +421,15 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
               }
             }}
             disabled={!nextHandover}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 hover:shadow-md transition-all text-left disabled:cursor-default disabled:hover:shadow-sm"
+            className="surface rounded-xl shadow-sm p-4 sm:p-5 hover:shadow-md transition-all text-left disabled:cursor-default disabled:hover:shadow-sm"
           >
             <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <ArrowRightLeft className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-orange-600" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-orange-100 dark:bg-orange-950/35 rounded-lg flex items-center justify-center">
+                <ArrowRightLeft className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-200" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-500 uppercase font-medium tracking-wide">Nächste Übergabe</p>
-                <p className="text-lg sm:text-xl font-bold text-slate-900">
+                <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
                   {nextHandover ? new Date(nextHandover.date).toLocaleDateString('de-DE', {
                     day: 'numeric',
                     month: 'short'
@@ -314,7 +438,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
               </div>
             </div>
             {nextHandover && nextHandover.time && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-1">
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mt-1">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{nextHandover.time} Uhr</span>
               </div>
@@ -323,54 +447,54 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
 
           <button
             onClick={() => setActiveView('requests')}
-            className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 text-left hover:shadow-md transition-all ${
+            className={`surface rounded-xl shadow-sm p-4 sm:p-5 text-left hover:shadow-md transition-all ${
               pendingRequests.length > 0 ? 'ring-2 ring-yellow-400' : ''
             }`}
           >
             <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
               <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
-                pendingRequests.length > 0 ? 'bg-yellow-100' : 'bg-green-100'
+                pendingRequests.length > 0 ? 'bg-yellow-100 dark:bg-yellow-950/35' : 'bg-green-100 dark:bg-emerald-950/30'
               }`}>
                 <Bell className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${
-                  pendingRequests.length > 0 ? 'text-yellow-600' : 'text-green-600'
+                  pendingRequests.length > 0 ? 'text-yellow-600 dark:text-yellow-200' : 'text-green-600 dark:text-emerald-200'
                 }`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-500 uppercase font-medium tracking-wide">Offene Anfragen</p>
-                <p className="text-lg sm:text-xl font-bold text-slate-900">
+                <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
                   {pendingRequests.length}
                 </p>
               </div>
             </div>
             {pendingRequests.length > 0 && (
-              <p className="text-xs text-yellow-700 font-medium">Benötigt Antwort</p>
+              <p className="text-xs text-yellow-700 dark:text-yellow-200 font-medium">Benötigt Antwort</p>
             )}
           </button>
 
           <button
             onClick={() => setActiveView('calendar')}
-            className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 text-left hover:shadow-md transition-all ${
+            className={`surface rounded-xl shadow-sm p-4 sm:p-5 text-left hover:shadow-md transition-all ${
               unplannedDays > 5 ? 'ring-2 ring-red-400' : ''
             }`}
           >
             <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
               <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
-                unplannedDays > 5 ? 'bg-red-100' :
-                unplannedDays > 0 ? 'bg-orange-100' : 'bg-green-100'
+                unplannedDays > 5 ? 'bg-red-100 dark:bg-red-950/35' :
+                unplannedDays > 0 ? 'bg-orange-100 dark:bg-orange-950/35' : 'bg-green-100 dark:bg-emerald-950/30'
               }`}>
                 <AlertCircle className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${
-                  unplannedDays > 5 ? 'text-red-600' :
-                  unplannedDays > 0 ? 'text-orange-600' : 'text-green-600'
+                  unplannedDays > 5 ? 'text-red-600 dark:text-red-200' :
+                  unplannedDays > 0 ? 'text-orange-600 dark:text-orange-200' : 'text-green-600 dark:text-emerald-200'
                 }`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-500 uppercase font-medium tracking-wide">Ungeplante Tage</p>
-                <p className="text-lg sm:text-xl font-bold text-slate-900">
+                <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
                   {unplannedDays}
                 </p>
               </div>
             </div>
-            <p className="text-xs text-slate-600">Nächste 2 Wochen</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300">Nächste 2 Wochen</p>
           </button>
         </div>
 
@@ -380,7 +504,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-3.5 sm:p-4 hover:shadow-lg transition-all text-left group"
           >
             <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                 <CalendarPlus className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
               </div>
               <div>
@@ -395,7 +519,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl p-3.5 sm:p-4 hover:shadow-lg transition-all text-left group relative"
           >
             <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Send className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
               </div>
               <div className="flex-1 min-w-0">
@@ -415,7 +539,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             className="bg-gradient-to-br from-slate-600 to-slate-700 text-white rounded-xl p-3.5 sm:p-4 hover:shadow-lg transition-all text-left group relative"
           >
             <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                 <BookOpen className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
               </div>
               <div className="flex-1 min-w-0">
@@ -431,20 +555,20 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-4 sm:mb-6 fade-in">
+        <div className="surface rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 mb-4 sm:mb-6 fade-in">
           <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-500 font-medium">Dieser Monat:</span>
               <div className="flex items-center gap-4 ml-2">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span className="text-sm font-medium text-slate-700">Martin</span>
-                  <span className="text-lg font-bold text-slate-900">{careStats.martin}</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Martin</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{careStats.martin}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm font-medium text-slate-700">Lisa</span>
-                  <span className="text-lg font-bold text-slate-900">{careStats.lisa}</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Lisa</span>
+                  <span className="text-lg font-bold text-slate-900 dark:text-slate-100">{careStats.lisa}</span>
                 </div>
               </div>
             </div>
@@ -452,20 +576,20 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             <div className="flex items-center gap-5">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-slate-500" />
-                <span className="text-sm text-slate-600">Fairness</span>
-                <span className="text-base font-bold text-slate-900">{careStats.fairness}%</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">Fairness</span>
+                <span className="text-base font-bold text-slate-900 dark:text-slate-100">{careStats.fairness}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-slate-500" />
-                <span className="text-sm text-slate-600">Wünsche</span>
-                <span className="text-base font-bold text-slate-900">{careStats.preferenceScore}%</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">Wünsche</span>
+                <span className="text-base font-bold text-slate-900 dark:text-slate-100">{careStats.preferenceScore}%</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-          <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+        <div className="surface rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+          <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
             <div className="flex overflow-x-auto scrollbar-hide">
               {navItems.map((item) => (
                 <button
@@ -473,8 +597,8 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                   onClick={() => setActiveView(item.id as any)}
                   className={`relative flex-1 min-w-[80px] sm:min-w-[120px] px-3 sm:px-6 py-3 sm:py-4 font-semibold text-sm sm:text-base transition-all duration-200 ${
                     activeView === item.id
-                      ? 'text-blue-600 bg-white'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-blue-600 dark:text-blue-400 surface'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -498,14 +622,14 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             {activeView === 'calendar' && (
               <div className="fade-in">
                 <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900">Kalenderansicht</h2>
-                  <div className="inline-flex rounded-lg sm:rounded-xl border-2 border-slate-200 p-0.5 sm:p-1 bg-slate-50">
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">Kalenderansicht</h2>
+                  <div className="inline-flex rounded-lg sm:rounded-xl border-2 border-slate-200 dark:border-slate-700 p-0.5 sm:p-1 bg-slate-50 dark:bg-slate-950/30">
                     <button
                       onClick={() => setCalendarMode('month')}
                       className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                         calendarMode === 'month'
-                          ? 'bg-white text-slate-900 shadow-md'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                          : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                       }`}
                     >
                       Monat
@@ -514,8 +638,8 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                       onClick={() => setCalendarMode('week')}
                       className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                         calendarMode === 'week'
-                          ? 'bg-white text-slate-900 shadow-md'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                          : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                       }`}
                     >
                       Woche
@@ -525,7 +649,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                 {calendarMode === 'month' ? (
                   <CalendarView
                     profiles={profiles}
-                    currentProfile={currentProfile}
+                    currentProfile={canonicalProfile}
                     onUpdate={() => {
                       loadDashboardData();
                       calculateCareStats();
@@ -537,7 +661,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                 ) : (
                   <WeekView
                     profiles={profiles}
-                    currentProfile={currentProfile}
+                    currentProfile={canonicalProfile}
                     onUpdate={() => {
                       loadDashboardData();
                       calculateCareStats();
@@ -549,7 +673,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             {activeView === 'requests' && (
               <RequestsPanel
                 profiles={profiles}
-                currentProfile={currentProfile}
+                currentProfile={canonicalProfile}
                 requests={pendingRequests}
                 onUpdate={loadDashboardData}
               />
@@ -557,16 +681,16 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
             {activeView === 'expenses' && (
               <ExpenseTracker
                 profiles={profiles}
-                currentProfile={currentProfile}
+                currentProfile={canonicalProfile}
               />
             )}
             {activeView === 'logbook' && (
-              <LogBook profiles={profiles} currentProfile={currentProfile} />
+              <LogBook profiles={profiles} currentProfile={canonicalProfile} />
             )}
             {activeView === 'notifications' && (
               <NotificationsPanel
                 profiles={profiles}
-                currentProfile={currentProfile}
+                currentProfile={canonicalProfile}
                 onUpdate={loadDashboardData}
               />
             )}
@@ -576,7 +700,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
 
       {showProfileSettings && (
         <ProfileSettings
-          profile={currentProfile}
+          profile={canonicalProfile}
           onClose={() => setShowProfileSettings(false)}
           onUpdate={() => {
             loadDashboardData();

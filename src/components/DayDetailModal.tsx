@@ -583,10 +583,10 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200/80 dark:border-slate-700 shadow-2xl"
+        className="surface rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200/80 dark:border-slate-700 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="sticky top-0 surface/95 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100">{formattedDate}</h2>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex-shrink-0">
@@ -604,7 +604,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsAssigning(true)}
-                    className="px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-lg font-medium hover:border-slate-300 dark:hover:border-slate-600 transition text-sm"
+                    className="px-4 py-2 surface border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-lg font-medium hover:border-slate-300 dark:hover:border-slate-600 transition text-sm"
                   >
                     Ändern
                   </button>
@@ -648,7 +648,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                 </div>
                 <button
                   onClick={() => setIsAssigning(false)}
-                  className="w-full px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-lg font-medium hover:border-slate-300 dark:hover:border-slate-600 transition text-sm"
+                  className="w-full px-4 py-2 surface border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-lg font-medium hover:border-slate-300 dark:hover:border-slate-600 transition text-sm"
                 >
                   Abbrechen
                 </button>
@@ -686,7 +686,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                       {pref.profile_id === currentProfile.id && (
                         <button
                           onClick={handleDeletePreference}
-                          className="p-1.5 hover:bg-white/50 rounded transition flex-shrink-0"
+                          className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded transition flex-shrink-0"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -717,7 +717,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                         className={`px-3 py-3 rounded-lg font-medium text-sm transition border-2 ${
                           isSelected
                             ? config.color + ' scale-105 shadow-md'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600'
+                            : 'surface border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         <Icon className="w-4 h-4 inline mr-1.5" />
@@ -735,7 +735,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={preferenceReason}
                     onChange={(e) => setPreferenceReason(e.target.value)}
                     placeholder="z.B. Geburtstag, Termin, etc."
-                    className="w-full px-4 py-2 border-2 border-pink-200 dark:border-slate-700 rounded-lg focus:border-pink-400 dark:focus:border-pink-400 focus:outline-none text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    className="w-full px-4 py-2 border-2 border-pink-200 dark:border-slate-700 rounded-lg focus:border-pink-400 dark:focus:border-pink-400 focus:outline-none text-sm surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -747,7 +747,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                   </button>
                   <button
                     onClick={() => setShowPreferenceEdit(false)}
-                    className="px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-lg font-medium hover:border-slate-300 dark:hover:border-slate-600 transition text-sm"
+                    className="px-4 py-2 surface border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-lg font-medium hover:border-slate-300 dark:hover:border-slate-600 transition text-sm"
                   >
                     Abbrechen
                   </button>
@@ -776,7 +776,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
             </div>
 
             {showAbsenceForm && (
-              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 mb-4 space-y-3 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <div className="surface rounded-xl p-4 mb-4 space-y-3 border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">
                   {editingAbsence ? 'Abwesenheit bearbeiten' : 'Neue Abwesenheit'}
                 </h4>
@@ -785,7 +785,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                   <select
                     value={newAbsence.user_id}
                     onChange={(e) => setNewAbsence({ ...newAbsence, user_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg surface text-slate-900 dark:text-slate-100"
                   >
                     <option value="">Bitte wählen...</option>
                     {profiles.map(profile => (
@@ -812,7 +812,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                         type="time"
                         value={newAbsence.start_time}
                         onChange={(e) => setNewAbsence({ ...newAbsence, start_time: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg surface text-slate-900 dark:text-slate-100"
                       />
                     </div>
                     <div>
@@ -821,7 +821,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                         type="time"
                         value={newAbsence.end_time}
                         onChange={(e) => setNewAbsence({ ...newAbsence, end_time: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg surface text-slate-900 dark:text-slate-100"
                       />
                     </div>
                   </div>
@@ -833,7 +833,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={newAbsence.reason}
                     onChange={(e) => setNewAbsence({ ...newAbsence, reason: e.target.value })}
                     placeholder="z.B. Termin, Urlaub, etc."
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg surface text-slate-900 dark:text-slate-100"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -922,7 +922,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
             </div>
 
             {showVisitForm && (
-              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 mb-4 space-y-3 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <div className="surface rounded-xl p-4 mb-4 space-y-3 border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">
                   {editingVisit ? 'Besuch bearbeiten' : 'Neuer Kurzbesuch'}
                 </h4>
@@ -932,7 +932,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={newVisit.visitor_id}
                       onChange={(e) => setNewVisit({ ...newVisit, visitor_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     >
                       <option value="">Wählen...</option>
                       {profiles.map(profile => (
@@ -945,7 +945,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={newVisit.visit_type}
                       onChange={(e) => setNewVisit({ ...newVisit, visit_type: e.target.value as VisitType })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     >
                       <option value="walk">Spaziergang</option>
                       <option value="short_stay">Kurzaufenthalt</option>
@@ -963,7 +963,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                       type="time"
                       value={newVisit.start_time}
                       onChange={(e) => setNewVisit({ ...newVisit, start_time: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     />
                   </div>
                   <div>
@@ -972,7 +972,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                       type="time"
                       value={newVisit.end_time}
                       onChange={(e) => setNewVisit({ ...newVisit, end_time: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     />
                   </div>
                   <div>
@@ -982,7 +982,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                       value={newVisit.duration_minutes}
                       onChange={(e) => setNewVisit({ ...newVisit, duration_minutes: e.target.value })}
                       placeholder="z.B. 60"
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
                     />
                   </div>
                 </div>
@@ -992,7 +992,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={newVisit.picked_up_from}
                       onChange={(e) => setNewVisit({ ...newVisit, picked_up_from: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     >
                       <option value="">-- Nicht festgelegt --</option>
                       {profiles.map(profile => (
@@ -1005,7 +1005,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={newVisit.returned_to}
                       onChange={(e) => setNewVisit({ ...newVisit, returned_to: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     >
                       <option value="">-- Nicht festgelegt --</option>
                       {profiles.map(profile => (
@@ -1020,7 +1020,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={newVisit.notes}
                     onChange={(e) => setNewVisit({ ...newVisit, notes: e.target.value })}
                     placeholder="z.B. Im Park, Bei schlechtem Wetter kürzer, etc."
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
                     rows={2}
                   />
                 </div>
@@ -1110,7 +1110,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <ArrowLeftRight className="w-5 h-5" />
                 Übergabe
               </h3>
@@ -1183,7 +1183,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={handoverFromUserId}
                       onChange={(e) => setHandoverFromUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Wählen...</option>
                       {profiles.map(profile => (
@@ -1196,7 +1196,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={handoverToUserId}
                       onChange={(e) => setHandoverToUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Wählen...</option>
                       {profiles.map(profile => (
@@ -1211,7 +1211,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     type="time"
                     value={handoverTime}
                     onChange={(e) => setHandoverTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -1221,7 +1221,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={handoverLocation}
                     onChange={(e) => setHandoverLocation(e.target.value)}
                     placeholder="z.B. Bei Martin, Bei Lisa"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -1230,7 +1230,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={bringsUserId}
                       onChange={(e) => setBringsUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">-- Auswählen --</option>
                       {profiles.map(profile => (
@@ -1243,7 +1243,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     <select
                       value={picksUpUserId}
                       onChange={(e) => setPicksUpUserId(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">-- Auswählen --</option>
                       {profiles.map(profile => (
@@ -1258,7 +1258,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={handoverNotes}
                     onChange={(e) => setHandoverNotes(e.target.value)}
                     placeholder="Besondere Hinweise zur Übergabe..."
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={2}
                   />
                 </div>
@@ -1289,13 +1289,13 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                 </div>
               </div>
             ) : (
-              <div className="text-center text-slate-500 py-4">Keine Übergabe geplant</div>
+              <div className="text-center text-slate-500 dark:text-slate-400 py-4">Keine Übergabe geplant</div>
             )}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Ereignisse
               </h3>
@@ -1320,7 +1320,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                   <select
                     value={newEvent.type}
                     onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as EventType })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                   >
                     <option value="vet">Tierarzt</option>
                     <option value="medication">Medikament</option>
@@ -1336,7 +1336,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={newEvent.title}
                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                     placeholder="z.B. Routineimpfung"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -1346,7 +1346,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                       type="time"
                       value={newEvent.time}
                       onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                     />
                   </div>
                   <div>
@@ -1356,7 +1356,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                       value={newEvent.location}
                       onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                       placeholder="Optional"
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
                     />
                   </div>
                 </div>
@@ -1366,7 +1366,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={newEvent.notes}
                     onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
                     placeholder="Optional"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
                     rows={2}
                   />
                 </div>
@@ -1389,7 +1389,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
 
             <div className="space-y-2">
               {details.events.map(event => (
-                <div key={event.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 group">
+                <div key={event.id} className="surface border border-slate-200 dark:border-slate-700 rounded-lg p-3 group">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
                       <div className="mt-1">{getEventIcon(event.event_type)}</div>
@@ -1426,14 +1426,14 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                 </div>
               ))}
               {details.events.length === 0 && !showEventForm && (
-                <div className="text-center text-slate-500 py-4">Keine Ereignisse</div>
+                <div className="text-center text-slate-500 dark:text-slate-400 py-4">Keine Ereignisse</div>
               )}
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <StickyNote className="w-5 h-5" />
                 Auffälligkeiten & Notizen
               </h3>
@@ -1458,7 +1458,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                   <select
                     value={newNote.type}
                     onChange={(e) => setNewNote({ ...newNote, type: e.target.value as NoteType })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg"
                   >
                     <option value="health">Gesundheit</option>
                     <option value="behavior">Verhalten</option>
@@ -1474,7 +1474,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                     value={newNote.content}
                     onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
                     placeholder="z.B. Kaja hat heute wenig gefressen"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg"
                     rows={3}
                   />
                 </div>
@@ -1510,7 +1510,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                 return (
                   <div
                     key={note.id}
-                    className={`bg-white dark:bg-slate-900 border rounded-lg p-3 group ${
+                    className={`surface border rounded-lg p-3 group ${
                       note.is_important ? 'border-red-300 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20' : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -1558,7 +1558,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
                 );
               })}
               {details.notes.length === 0 && !showNoteForm && (
-                <div className="text-center text-slate-500 py-4">Keine Notizen</div>
+                <div className="text-center text-slate-500 dark:text-slate-400 py-4">Keine Notizen</div>
               )}
             </div>
           </div>

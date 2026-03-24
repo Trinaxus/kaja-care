@@ -208,7 +208,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
           className={`px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
             filter === 'all'
               ? 'bg-blue-500 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              : 'surface text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           Alle
@@ -218,7 +218,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
           className={`px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${
             filter === 'important'
               ? 'bg-red-500 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              : 'surface text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -229,7 +229,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
           className={`px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap ${
             filter === 'health'
               ? 'bg-emerald-500 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              : 'surface text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
           }`}
         >
           <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -237,7 +237,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900/50 rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
+      <div className="surface rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
         <div className="space-y-3">
           {entries.map((entry, idx) => {
             const showDate = idx === 0 || entries[idx - 1].date !== entry.date;
@@ -259,7 +259,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                     className={`p-4 rounded-xl border-l-4 transition-all hover:shadow-md relative group ${
                       (entry.data as CareDayNote).is_important
                         ? 'bg-gradient-to-r from-red-50 to-white dark:from-red-950/30 dark:to-slate-900/40 border-red-500 shadow-sm'
-                        : 'bg-white dark:bg-slate-900/40 border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'
+                        : 'surface border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'
                     }`}
                   >
                     {currentProfile && (entry.data as CareDayNote).caretaker_id === currentProfile.id && (
@@ -393,7 +393,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
 
       {showAddNote && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700">
+          <div className="surface rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Neue Notiz</h3>
               <button
@@ -411,7 +411,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
@@ -433,7 +433,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                     className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       noteType === 'health'
                         ? 'bg-emerald-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     Gesundheit
@@ -443,7 +443,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                     className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       noteType === 'behavior'
                         ? 'bg-purple-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     Verhalten
@@ -452,17 +452,17 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Notiz</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Notiz</label>
                 <textarea
                   value={noteContent}
                   onChange={(e) => setNoteContent(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                   placeholder="Was ist passiert?"
                 />
               </div>
 
-              <label className="flex items-center gap-3 p-3 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+              <label className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-900/50 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors">
                 <input
                   type="checkbox"
                   checked={isImportant}
@@ -470,15 +470,15 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                   className="w-5 h-5 text-red-500 rounded focus:ring-2 focus:ring-red-500"
                 />
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600" />
-                  <span className="font-medium text-red-900">Als wichtig markieren</span>
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-200" />
+                  <span className="font-medium text-red-900 dark:text-red-100">Als wichtig markieren</span>
                 </div>
               </label>
 
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowAddNote(false)}
-                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition-colors"
                 >
                   Abbrechen
                 </button>
@@ -497,37 +497,37 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
 
       {showAddEvent && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="surface rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-900">Neues Ereignis</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Neues Ereignis</h3>
               <button
                 onClick={() => setShowAddEvent(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Datum</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Datum</label>
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Typ</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Typ</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setEventType('vet')}
                     className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       eventType === 'vet'
                         ? 'bg-blue-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     Tierarzt
@@ -537,7 +537,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                     className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       eventType === 'special'
                         ? 'bg-blue-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     Pflege
@@ -547,7 +547,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                     className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       eventType === 'other'
                         ? 'bg-blue-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     Sonstiges
@@ -556,34 +556,34 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Titel</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Titel</label>
                 <input
                   type="text"
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                   placeholder="z.B. Impfung, Krallen schneiden"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Ort (optional)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Ort (optional)</label>
                 <input
                   type="text"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                   placeholder="z.B. Tierarztpraxis Dr. Müller"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Notizen (optional)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Notizen (optional)</label>
                 <textarea
                   value={eventNotes}
                   onChange={(e) => setEventNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                   placeholder="Zusätzliche Details..."
                 />
               </div>
@@ -591,7 +591,7 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowAddEvent(false)}
-                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition-colors"
                 >
                   Abbrechen
                 </button>

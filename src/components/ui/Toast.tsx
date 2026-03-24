@@ -52,7 +52,7 @@ export function Toast({ type, message, onClose, duration = 5000 }: ToastProps) {
           setIsExiting(true);
           setTimeout(onClose, 300);
         }}
-        className="flex-shrink-0 hover:bg-white/20 rounded-lg p-1 transition"
+        className="flex-shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg p-1 transition"
       >
         <X className="w-4 h-4" />
       </button>

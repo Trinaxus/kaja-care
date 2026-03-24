@@ -250,7 +250,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
+      <div className="surface rounded-xl sm:rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
         <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -300,7 +300,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                     />
                   </div>
                   <div>
@@ -309,7 +309,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
                     />
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                   Planungsoptionen
                 </h3>
 
-                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition bg-white dark:bg-slate-950/20">
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition surface">
                   <input
                     type="checkbox"
                     checked={options.respectPreferences}
@@ -334,7 +334,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition bg-white dark:bg-slate-950/20">
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition surface">
                   <input
                     type="checkbox"
                     checked={options.prioritizeWishes}
@@ -347,7 +347,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition bg-white dark:bg-slate-950/20">
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition surface">
                   <input
                     type="checkbox"
                     checked={options.balanceWorkload}
@@ -360,7 +360,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition bg-white dark:bg-slate-950/20">
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition surface">
                   <input
                     type="checkbox"
                     checked={options.avoidConsecutiveDays}
@@ -373,7 +373,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition bg-white dark:bg-slate-950/20">
+                <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600 cursor-pointer transition surface">
                   <input
                     type="checkbox"
                     checked={options.considerAbsences}
@@ -451,7 +451,7 @@ export default function SmartPlanningModal({ profiles, currentMonth, onClose, on
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 px-4 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 font-medium hover:bg-white dark:hover:bg-slate-800 transition"
+              className="flex-1 py-3 px-4 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
               Abbrechen
             </button>

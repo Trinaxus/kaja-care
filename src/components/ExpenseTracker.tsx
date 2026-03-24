@@ -11,12 +11,12 @@ interface ExpenseTrackerProps {
 }
 
 const CATEGORY_CONFIG = {
-  food: { icon: ShoppingCart, label: 'Futter', color: 'bg-orange-100 text-orange-700' },
-  toys: { icon: Package, label: 'Spielzeug', color: 'bg-blue-100 text-blue-700' },
-  vet: { icon: Stethoscope, label: 'Tierarzt', color: 'bg-red-100 text-red-700' },
-  grooming: { icon: Scissors, label: 'Pflege', color: 'bg-green-100 text-green-700' },
-  accessories: { icon: Package, label: 'Zubehör', color: 'bg-purple-100 text-purple-700' },
-  other: { icon: MoreHorizontal, label: 'Sonstiges', color: 'bg-slate-100 text-slate-700' }
+  food: { icon: ShoppingCart, label: 'Futter', color: 'bg-orange-100 text-orange-700 dark:bg-orange-950/35 dark:text-orange-200' },
+  toys: { icon: Package, label: 'Spielzeug', color: 'bg-blue-100 text-blue-700 dark:bg-blue-950/35 dark:text-blue-200' },
+  vet: { icon: Stethoscope, label: 'Tierarzt', color: 'bg-red-100 text-red-700 dark:bg-rose-950/35 dark:text-rose-200' },
+  grooming: { icon: Scissors, label: 'Pflege', color: 'bg-green-100 text-green-700 dark:bg-emerald-950/30 dark:text-emerald-200' },
+  accessories: { icon: Package, label: 'Zubehör', color: 'bg-purple-100 text-purple-700 dark:bg-purple-950/35 dark:text-purple-200' },
+  other: { icon: MoreHorizontal, label: 'Sonstiges', color: 'bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200' }
 };
 
 export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps) {
@@ -187,7 +187,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
         )}
       </div>
 
-      <div className="flex items-center justify-between bg-white dark:bg-slate-900/50 rounded-xl p-3 sm:p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+      <div className="surface rounded-xl p-3 sm:p-4 shadow-sm">
         <button
           onClick={() => setSelectedYear(selectedYear - 1)}
           className="px-3 sm:px-4 py-2 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition font-bold text-lg sm:text-xl"
@@ -279,7 +279,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
       </div>
 
       {(showNewExpense || editingExpense) && (
-        <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
+        <div className="surface-muted rounded-xl p-6">
           <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-4">
             {editingExpense ? 'Ausgabe bearbeiten' : 'Neue Ausgabe'}
           </h4>
@@ -294,7 +294,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -304,7 +304,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -324,7 +324,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 justify-center ${
                       isSelected
                         ? 'bg-blue-500 text-white'
-                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                        : 'surface text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -342,7 +342,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional"
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -350,7 +350,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Bezahlt von</label>
               <select
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 surface text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={paidBy}
                 onChange={(e) => setPaidBy(e.target.value)}
               >
@@ -395,7 +395,7 @@ export function ExpenseTracker({ profiles, currentProfile }: ExpenseTrackerProps
             return (
               <div
                 key={expense.id}
-                className="bg-white dark:bg-slate-900/50 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all"
+                className="surface rounded-xl p-4 shadow-sm hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1">

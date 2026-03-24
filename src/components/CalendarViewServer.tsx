@@ -201,14 +201,14 @@ export function CalendarViewServerInner({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="p-2 rounded-xl bg-white/70 border border-white/30 shadow-sm hover:shadow"
+            className="p-2 rounded-xl surface border border-white/30 dark:border-slate-700/30 shadow-sm hover:shadow"
             onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
           >
             <ChevronLeft className="w-5 h-5 text-slate-700" />
           </button>
           <button
             type="button"
-            className="p-2 rounded-xl bg-white/70 border border-white/30 shadow-sm hover:shadow"
+            className="p-2 rounded-xl surface border border-white/30 dark:border-slate-700/30 shadow-sm hover:shadow"
             onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
           >
             <ChevronRight className="w-5 h-5 text-slate-700" />
@@ -244,7 +244,7 @@ export function CalendarViewServerInner({
               className={
                 'text-left rounded-2xl border p-2 sm:p-3 min-h-[90px] sm:min-h-[110px] transition-all ' +
                 (day.inMonth
-                  ? 'bg-white/70 border-white/40 hover:bg-white/90 dark:bg-slate-900/60 dark:border-slate-700/40 dark:hover:bg-slate-900/80'
+                  ? 'surface border-white/40 dark:border-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-900/80'
                   : 'bg-slate-50/70 border-slate-200/50 text-slate-400 dark:bg-slate-950/30 dark:border-slate-800/60')
               }
             >
@@ -254,7 +254,7 @@ export function CalendarViewServerInner({
                     'w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ' +
                     (day.isToday
                       ? `${accent.today} text-white shadow`
-                      : 'text-slate-700 bg-white/60 dark:bg-slate-950/40 dark:text-slate-200')
+                      : 'text-slate-700 surface dark:text-slate-200')
                   }
                 >
                   {day.date.getDate()}
@@ -291,7 +291,7 @@ export function CalendarViewServerInner({
 
       {selectedDate && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/30">
-          <div className="w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-full max-w-xl surface rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700">
             <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm text-slate-500 dark:text-slate-400">Tag</div>

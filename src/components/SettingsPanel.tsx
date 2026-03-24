@@ -209,7 +209,7 @@ export function SettingsPanel() {
 
       {error && <div className="text-red-700 dark:text-red-300 font-medium">{error}</div>}
 
-      <div className="bg-white/60 dark:bg-slate-950/30 border border-white/40 dark:border-slate-800 rounded-2xl p-5">
+      <div className="surface rounded-2xl p-5">
         <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">User hinzufügen (ohne E-Mail)</div>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="sm:col-span-1">
@@ -269,7 +269,7 @@ export function SettingsPanel() {
         {users.map((u) => (
           <div
             key={u.id}
-            className="bg-white/60 dark:bg-slate-950/30 border border-white/40 dark:border-slate-800 rounded-2xl p-5"
+            className="surface rounded-2xl p-5"
           >
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="min-w-[220px]">

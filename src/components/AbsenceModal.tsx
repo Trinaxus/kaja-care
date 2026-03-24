@@ -77,15 +77,15 @@ export function AbsenceModal({ profiles, onClose, onUpdate }: AbsenceModalProps)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+      <div className="surface rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+        <div className="sticky top-0 surface border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <UserX className="w-6 h-6 text-orange-600" />
             Abwesenheit eintragen
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition"
+            className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition"
           >
             <X className="w-6 h-6" />
           </button>
@@ -93,11 +93,11 @@ export function AbsenceModal({ profiles, onClose, onUpdate }: AbsenceModalProps)
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Person</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Person</label>
             <select
               value={absence.user_id}
               onChange={(e) => setAbsence({ ...absence, user_id: e.target.value })}
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 surface text-slate-900 dark:text-slate-100"
             >
               <option value="">Bitte wählen...</option>
               {profiles.map(profile => (
@@ -210,7 +210,7 @@ export function AbsenceModal({ profiles, onClose, onUpdate }: AbsenceModalProps)
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium"
+            className="px-4 py-2.5 surface border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition font-medium"
           >
             Abbrechen
           </button>

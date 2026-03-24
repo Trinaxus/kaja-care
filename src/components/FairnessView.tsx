@@ -283,7 +283,7 @@ export function FairnessView({ profiles }: { profiles: Profile[] }) {
           <button
             type="button"
             onClick={previousMonth}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/40"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
             title="Vorheriger Monat"
           >
             <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -297,7 +297,7 @@ export function FairnessView({ profiles }: { profiles: Profile[] }) {
           <button
             type="button"
             onClick={nextMonth}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/40"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
             title="Nächster Monat"
           >
             <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
@@ -310,7 +310,7 @@ export function FairnessView({ profiles }: { profiles: Profile[] }) {
 
       {status === 'ready' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-white/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-5">
+          <div className="surface rounded-2xl p-5">
             <div className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-4">Anteile (Besitz-Tage)</div>
 
             <div className="flex items-center justify-center">
@@ -332,7 +332,7 @@ export function FairnessView({ profiles }: { profiles: Profile[] }) {
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-white/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-5">
+          <div className="lg:col-span-2 surface rounded-2xl p-5">
             <div className="text-sm font-semibold text-slate-700 dark:text-slate-100 mb-4">Details pro Tag</div>
 
             <div className="overflow-auto">

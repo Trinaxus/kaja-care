@@ -89,22 +89,22 @@ export function AssetsExpenses() {
         </button>
       </div>
 
-      <div className="text-slate-900 font-bold">Summe: {total.toFixed(2)}€</div>
+      <div className="text-slate-900 dark:text-slate-100 font-bold">Summe: {total.toFixed(2)}€</div>
 
-      {status === 'loading' && <div className="text-slate-600">Lade Expenses…</div>}
-      {status === 'error' && <div className="text-red-700 font-medium">{error}</div>}
-      {error && status === 'ready' && <div className="text-red-700 font-medium">{error}</div>}
+      {status === 'loading' && <div className="text-slate-600 dark:text-slate-300">Lade Expenses…</div>}
+      {status === 'error' && <div className="text-red-700 dark:text-red-300 font-medium">{error}</div>}
+      {error && status === 'ready' && <div className="text-red-700 dark:text-red-300 font-medium">{error}</div>}
 
       <div className="space-y-3">
         {items.length === 0 ? (
-          <div className="text-slate-600">Noch keine Einträge.</div>
+          <div className="text-slate-600 dark:text-slate-300">Noch keine Einträge.</div>
         ) : (
           items.map((it) => (
-            <div key={it.id} className="bg-white/60 border border-white/40 rounded-2xl p-4 flex items-start justify-between gap-3">
+            <div key={it.id} className="surface rounded-2xl p-4 flex items-start justify-between gap-3">
               <div>
-                <div className="text-slate-900 font-semibold">{it.amount.toFixed(2)}€</div>
-                <div className="text-slate-700">{it.description || '—'}</div>
-                <div className="text-xs text-slate-500 mt-1">{new Date(it.createdAt).toLocaleString()}</div>
+                <div className="text-slate-900 dark:text-slate-100 font-semibold">{it.amount.toFixed(2)}€</div>
+                <div className="text-slate-700 dark:text-slate-300">{it.description || '—'}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{new Date(it.createdAt).toLocaleString()}</div>
               </div>
             </div>
           ))

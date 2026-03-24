@@ -15,5 +15,6 @@ json_response([
         'accessRole' => (string) (($user['accessRole'] ?? '') !== '' ? $user['accessRole'] : 'user'),
         'userType' => (string) (($user['userType'] ?? '') !== '' ? $user['userType'] : 'audience'),
         'color' => (string) (($user['color'] ?? '') !== '' ? $user['color'] : 'blue'),
+        'preferences' => (isset($user['preferences']) && is_array($user['preferences'])) ? $user['preferences'] : new stdClass(),
     ],
 ]);

@@ -497,21 +497,21 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3">
               <button
                 onClick={() => setMode('preferences')}
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-slate-200 rounded-xl font-medium text-slate-700 hover:border-slate-300 transition text-sm sm:text-base"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 surface border-2 border-slate-200 rounded-xl font-medium text-slate-700 hover:border-slate-300 transition text-sm sm:text-base"
               >
                 <Heart className="w-4 h-4 inline mr-2 text-pink-500" />
                 Wünsche markieren
               </button>
               <button
                 onClick={() => setShowAbsenceModal(true)}
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-slate-200 rounded-xl font-medium text-slate-700 hover:border-slate-300 transition text-sm sm:text-base"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 surface border-2 border-slate-200 rounded-xl font-medium text-slate-700 hover:border-slate-300 transition text-sm sm:text-base"
               >
                 <UserX className="w-4 h-4 inline mr-2 text-orange-500" />
                 Abwesenheit eintragen
               </button>
               <button
                 onClick={() => setMode('assign')}
-                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-slate-200 rounded-xl font-medium text-slate-700 hover:border-slate-300 transition text-sm sm:text-base"
+                className="flex-1 px-3 sm:px-4 py-2 sm:py-3 surface border-2 border-slate-200 rounded-xl font-medium text-slate-700 hover:border-slate-300 transition text-sm sm:text-base"
               >
                 Manuell zuweisen
               </button>
@@ -524,7 +524,7 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={copyPreferencesFromLastMonth}
-                  className="px-3 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition flex items-center gap-1.5"
+                  className="px-3 py-1.5 surface border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition flex items-center gap-1.5"
                 >
                   <Copy className="w-3 h-3" />
                   Wünsche vom Vormonat kopieren
@@ -569,31 +569,31 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => selectPattern('weekends')}
-                className="px-3 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
+                className="px-3 py-1.5 surface border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
               >
                 Wochenenden
               </button>
               <button
                 onClick={() => selectPattern('weekdays')}
-                className="px-3 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
+                className="px-3 py-1.5 surface border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
               >
                 Werktage
               </button>
               <button
                 onClick={() => selectPattern('mondays')}
-                className="px-3 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
+                className="px-3 py-1.5 surface border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
               >
                 Montage
               </button>
               <button
                 onClick={() => selectPattern('fridays')}
-                className="px-3 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
+                className="px-3 py-1.5 surface border border-purple-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-purple-50 transition"
               >
                 Freitage
               </button>
               <button
                 onClick={() => setSelectedDays(new Set())}
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition"
+                className="px-3 py-1.5 surface border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition"
               >
                 Auswahl löschen
               </button>
@@ -610,7 +610,7 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
                   className={`px-2 sm:px-4 py-2 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition shadow-sm ${
                     selectedPreference === level
                       ? config.color.replace('text-', 'bg-').replace('bg-bg-', 'bg-').replace('-100', '-500') + ' text-white scale-105'
-                      : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300'
+                      : 'surface border-2 border-slate-200 text-slate-700 hover:border-slate-300'
                   }`}
                 >
                   <Icon className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1 sm:mr-2" />
@@ -656,7 +656,7 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
                 setPreferenceReason('');
                 setShowReasonInput(false);
               }}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-slate-300 transition text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 sm:py-3 surface border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-slate-300 transition text-sm sm:text-base"
             >
               Abbrechen
             </button>
@@ -680,7 +680,7 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
                     ? profile.color === 'blue'
                       ? 'bg-blue-500 text-white scale-105'
                       : 'bg-green-500 text-white scale-105'
-                    : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300'
+                    : 'surface border-2 border-slate-200 text-slate-700 hover:border-slate-300'
                 }`}
               >
                 {profile.name}
@@ -702,7 +702,7 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
                 setSelectedDays(new Set());
                 setSelectedCaretaker(null);
               }}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-slate-300 transition text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 sm:py-3 surface border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-slate-300 transition text-sm sm:text-base"
             >
               Abbrechen
             </button>
@@ -735,7 +735,7 @@ export function MonthPlanner({ profiles, currentProfile, onUpdate }: MonthPlanne
                 ${isSelected ? 'ring-2 sm:ring-4 ring-blue-400 shadow-lg scale-105' : 'shadow-sm hover:shadow-md'}
                 ${caretaker?.color === 'blue' && !isSelected ? 'bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200' : ''}
                 ${caretaker?.color === 'green' && !isSelected ? 'bg-gradient-to-br from-green-50 to-green-100 border border-green-200' : ''}
-                ${!caretaker && !isSelected ? 'bg-white border border-slate-200' : ''}
+                ${!caretaker && !isSelected ? 'surface border border-slate-200' : ''}
                 ${hasConflict && !caretaker ? 'border-2 border-red-300 bg-red-50' : ''}
                 ${isWeekend && !caretaker && !isSelected ? 'bg-slate-50' : ''}
               `}

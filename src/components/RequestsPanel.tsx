@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile, Request } from '../lib/database.types';
 import { Calendar, Check, X, Plus, MessageSquare, Trash2, CreditCard as Edit2 } from 'lucide-react';
+import { deleteItems, listItems, upsertItems } from '../api/collections';
 
 interface RequestsPanelProps {
   profiles: Profile[];
@@ -10,7 +10,7 @@ interface RequestsPanelProps {
   onUpdate: () => void;
 }
 
-export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: RequestsPanelProps) {
+export function RequestsPanel({ profiles, currentProfile, onUpdate }: RequestsPanelProps) {
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [startDate, setStartDate] = useState('');
@@ -23,26 +23,31 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
   }, []);
 
   const loadAllRequests = async () => {
-    const { data } = await supabase
-      .from('requests')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) setAllRequests(data);
+    try {
+      const data = await listItems<Request>('requests');
+      data.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      setAllRequests(data);
+    } catch {
+      setAllRequests([]);
+    }
   };
 
   const handleCreateRequest = async () => {
     const otherProfile = profiles.find(p => p.id !== currentProfile.id);
     if (!otherProfile || !startDate || !endDate) return;
 
-    await supabase.from('requests').insert({
+    const nowIso = new Date().toISOString();
+    await upsertItems('requests', {
+      id: crypto.randomUUID(),
       from_user_id: currentProfile.id,
       to_user_id: otherProfile.id,
       start_date: startDate,
       end_date: endDate,
       message: message || null,
       status: 'pending',
-    });
+      created_at: nowIso,
+      updated_at: nowIso
+    }, ['id']);
 
     resetForm();
     await loadAllRequests();
@@ -52,14 +57,17 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
   const handleUpdateRequest = async (requestId: string) => {
     if (!startDate || !endDate) return;
 
-    await supabase
-      .from('requests')
-      .update({
+    await upsertItems(
+      'requests',
+      {
+        id: requestId,
         start_date: startDate,
         end_date: endDate,
         message: message || null,
-      })
-      .eq('id', requestId);
+        updated_at: new Date().toISOString()
+      },
+      ['id']
+    );
 
     resetForm();
     await loadAllRequests();
@@ -67,7 +75,7 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
   };
 
   const handleDeleteRequest = async (requestId: string) => {
-    await supabase.from('requests').delete().eq('id', requestId);
+    await deleteItems('requests', { id: requestId });
 
     await loadAllRequests();
     onUpdate();
@@ -89,10 +97,7 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
   };
 
   const handleAcceptRequest = async (request: Request) => {
-    await supabase
-      .from('requests')
-      .update({ status: 'accepted' })
-      .eq('id', request.id);
+    await upsertItems('requests', { id: request.id, status: 'accepted', updated_at: new Date().toISOString() }, ['id']);
 
     const dates: string[] = [];
     const start = new Date(request.start_date);
@@ -105,16 +110,22 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
     }
 
     const assignments = dates.map(date => ({
+      id: crypto.randomUUID(),
       date,
       caretaker_id: request.from_user_id,
       created_by: currentProfile.id,
       status: 'planned' as const,
+      preference_score: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      start_time: null,
+      end_time: null,
+      is_full_day: true,
+      notes: null
     }));
 
     for (const assignment of assignments) {
-      await supabase
-        .from('care_assignments')
-        .upsert(assignment, { onConflict: 'date' });
+      await upsertItems('care_assignments', assignment, ['date']);
     }
 
     await loadAllRequests();
@@ -122,10 +133,7 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
   };
 
   const handleDeclineRequest = async (request: Request) => {
-    await supabase
-      .from('requests')
-      .update({ status: 'declined' })
-      .eq('id', request.id);
+    await upsertItems('requests', { id: request.id, status: 'declined', updated_at: new Date().toISOString() }, ['id']);
 
     await loadAllRequests();
     onUpdate();
@@ -261,11 +269,11 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
                               fromProfile?.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
                             }`}
                           ></div>
-                          <span className="font-bold text-slate-900">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">
                             {fromProfile?.name} möchte, dass du Kaja nimmst
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
+                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-2">
                           <Calendar className="w-4 h-4" />
                           <span>
                             {new Date(request.start_date).toLocaleDateString()} -{' '}
@@ -273,7 +281,7 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
                           </span>
                         </div>
                         {request.message && (
-                          <div className="flex items-start gap-2 text-sm text-slate-700 bg-white rounded-lg p-3">
+                          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 surface rounded-lg p-3">
                             <MessageSquare className="w-4 h-4 mt-0.5" />
                             <p>{request.message}</p>
                           </div>
@@ -327,7 +335,7 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
 
         {sentRequests.length > 0 && (
           <div>
-            <h4 className="font-bold text-slate-900 mb-3">Gesendete Anfragen</h4>
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-3">Gesendete Anfragen</h4>
             <div className="space-y-3">
               {sentRequests.map(request => {
                 const toProfile = getProfileById(request.to_user_id);
@@ -337,10 +345,10 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
                     key={request.id}
                     className={`p-4 rounded-xl border-2 group ${
                       request.status === 'pending'
-                        ? 'bg-slate-50 border-slate-300'
+                        ? 'bg-slate-50 dark:bg-slate-900/40 border-slate-300 dark:border-slate-700'
                         : request.status === 'accepted'
-                        ? 'bg-green-50 border-green-300'
-                        : 'bg-red-50 border-red-300'
+                        ? 'bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-900/50'
+                        : 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-900/50'
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -351,11 +359,11 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
                               toProfile?.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
                             }`}
                           ></div>
-                          <span className="font-bold text-slate-900">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">
                             Anfrage an {toProfile?.name}, Kaja zu nehmen
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
+                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-2">
                           <Calendar className="w-4 h-4" />
                           <span>
                             {new Date(request.start_date).toLocaleDateString()} -{' '}
@@ -363,7 +371,7 @@ export function RequestsPanel({ profiles, currentProfile, requests, onUpdate }: 
                           </span>
                         </div>
                         {request.message && (
-                          <div className="flex items-start gap-2 text-sm text-slate-700 bg-white rounded-lg p-3">
+                          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 surface rounded-lg p-3">
                             <MessageSquare className="w-4 h-4 mt-0.5" />
                             <p>{request.message}</p>
                           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile } from '../lib/database.types';
+import { deleteItems, listItems, upsertItems } from '../api/collections';
 import {
   Bell,
   History,
@@ -8,7 +8,6 @@ import {
   Send,
   MessageSquare,
   X,
-  Check,
   Reply,
   Calendar,
   ArrowRightLeft,
@@ -44,15 +43,18 @@ interface NotificationsPanelProps {
   profiles: Profile[];
   currentProfile: Profile;
   onUpdate?: () => void;
+  composeToProfileId?: string | null;
+  composeNonce?: number;
 }
 
-export function NotificationsPanel({ profiles, currentProfile, onUpdate }: NotificationsPanelProps) {
+export function NotificationsPanel({ profiles, currentProfile, onUpdate, composeToProfileId, composeNonce }: NotificationsPanelProps) {
   const [activeTab, setActiveTab] = useState<'messages' | 'history'>('messages');
   const [messages, setMessages] = useState<Message[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [loadError, setLoadError] = useState<string>('');
 
   const [composeForm, setComposeForm] = useState({
     to_profile_id: '',
@@ -63,73 +65,86 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
   useEffect(() => {
     loadMessages();
     loadActivityLog();
-
-    const messagesSubscription = supabase
-      .channel('messages_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-        loadMessages();
-      })
-      .subscribe();
-
-    const activitySubscription = supabase
-      .channel('activity_log_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'activity_log' }, () => {
-        loadActivityLog();
-      })
-      .subscribe();
-
-    return () => {
-      messagesSubscription.unsubscribe();
-      activitySubscription.unsubscribe();
-    };
   }, [currentProfile]);
 
-  const loadMessages = async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`from_profile_id.eq.${currentProfile.id},to_profile_id.eq.${currentProfile.id}`)
-      .order('created_at', { ascending: false });
+  useEffect(() => {
+    if (!composeNonce) return;
+    if (!composeToProfileId) return;
+    setActiveTab('messages');
+    setShowCompose(true);
+    setReplyTo(null);
+    setComposeForm({ to_profile_id: composeToProfileId, subject: '', content: '' });
+  }, [composeNonce, composeToProfileId]);
 
-    if (data) setMessages(data);
+  const loadMessages = async () => {
+    try {
+      setLoadError('');
+      const all = await listItems<Message>('messages');
+      console.debug('[NotificationsPanel] currentProfile.id', currentProfile.id);
+      console.debug('[NotificationsPanel] messages total', all.length, 'sample', all[0]);
+      const mine = all.filter(
+        (m) => m.from_profile_id === currentProfile.id || m.to_profile_id === currentProfile.id
+      );
+      mine.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+
+      if (mine.length === 0 && all.length > 0) {
+        const msg =
+          'Nachrichten sind vorhanden, aber keine passt zur aktuellen Profil-ID. (ID-Mismatch zwischen Login-User und importierten Messages)';
+        console.warn('[NotificationsPanel] ID mismatch: showing all messages', {
+          currentProfileId: currentProfile.id,
+          sampleMessage: all[0]
+        });
+        setLoadError(msg);
+        all.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+        setMessages(all);
+        return;
+      }
+
+      setMessages(mine);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[NotificationsPanel] loadMessages failed', e);
+      setLoadError(msg);
+      setMessages([]);
+    }
   };
 
   const loadActivityLog = async () => {
-    const { data } = await supabase
-      .from('activity_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (data) setActivityLog(data);
+    try {
+      setLoadError('');
+      const all = await listItems<ActivityLog>('activity_log');
+      all.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      setActivityLog(all.slice(0, 50));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[NotificationsPanel] loadActivityLog failed', e);
+      setLoadError(msg);
+      setActivityLog([]);
+    }
   };
 
   const markAsRead = async (message: Message) => {
     if (message.to_profile_id === currentProfile.id && !message.is_read) {
-      await supabase
-        .from('messages')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('id', message.id);
+      await upsertItems('messages', { id: message.id, is_read: true, read_at: new Date().toISOString() }, ['id']);
       loadMessages();
     }
   };
 
   const toggleRead = async (message: Message) => {
-    await supabase
-      .from('messages')
-      .update({
+    await upsertItems(
+      'messages',
+      {
+        id: message.id,
         is_read: !message.is_read,
         read_at: message.is_read ? null : new Date().toISOString()
-      })
-      .eq('id', message.id);
+      },
+      ['id']
+    );
     loadMessages();
   };
 
   const deleteMessage = async (messageId: string) => {
-    await supabase
-      .from('messages')
-      .delete()
-      .eq('id', messageId);
+    await deleteItems('messages', { id: messageId });
     setSelectedMessage(null);
     loadMessages();
   };
@@ -137,25 +152,34 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
   const sendMessage = async () => {
     if (!composeForm.to_profile_id || !composeForm.subject || !composeForm.content) return;
 
-    await supabase.from('messages').insert({
+    const nowIso = new Date().toISOString();
+    await upsertItems('messages', {
+      id: crypto.randomUUID(),
       from_profile_id: currentProfile.id,
       to_profile_id: composeForm.to_profile_id,
       subject: composeForm.subject,
       content: composeForm.content,
-      parent_message_id: replyTo?.id || null
-    });
+      is_read: false,
+      parent_message_id: replyTo?.id || null,
+      created_at: nowIso,
+      read_at: null
+    }, ['id']);
 
-    await supabase.from('activity_log').insert({
+    await upsertItems('activity_log', {
+      id: crypto.randomUUID(),
       activity_type: 'message_sent',
       description: `${currentProfile.name} hat eine Nachricht gesendet: ${composeForm.subject}`,
+      related_date: null,
       actor_id: currentProfile.id,
+      created_at: nowIso,
       metadata: { subject: composeForm.subject }
-    });
+    }, ['id']);
 
     setComposeForm({ to_profile_id: '', subject: '', content: '' });
     setShowCompose(false);
     setReplyTo(null);
     loadMessages();
+    onUpdate?.();
   };
 
   const handleReply = (message: Message) => {
@@ -195,6 +219,11 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {loadError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+          {loadError}
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex gap-2 sm:gap-3 overflow-x-auto">
           <button
@@ -202,7 +231,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap ${
               activeTab === 'messages'
                 ? 'bg-blue-500 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                : 'surface text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60'
             }`}
           >
             <MessageSquare className="w-4 h-4 flex-shrink-0" />
@@ -210,7 +239,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
             {unreadCount > 0 && (
               <span className={`ml-1 text-xs font-bold rounded-full px-2 py-0.5 ${
                 activeTab === 'messages'
-                  ? 'bg-white text-blue-600'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400'
                   : 'bg-red-500 text-white'
               }`}>
                 {unreadCount}
@@ -222,7 +251,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg font-medium transition-all text-sm sm:text-base whitespace-nowrap ${
               activeTab === 'history'
                 ? 'bg-slate-700 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                : 'surface text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60'
             }`}
           >
             <History className="w-4 h-4 flex-shrink-0" />
@@ -248,8 +277,8 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <Inbox className="w-5 h-5 text-slate-700" />
-              <h3 className="text-lg font-bold text-slate-900">Posteingang</h3>
+              <Inbox className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Posteingang</h3>
               {unreadCount > 0 && (
                 <span className="text-xs bg-red-500 text-white px-2.5 py-1 rounded-full font-bold">
                   {unreadCount}
@@ -257,9 +286,9 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
               )}
             </div>
             {inbox.length === 0 ? (
-              <div className="bg-slate-50 rounded-xl p-12 text-center border-2 border-dashed border-slate-200">
-                <Inbox className="w-16 h-16 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 font-medium">Keine Nachrichten</p>
+              <div className="surface-muted rounded-xl p-12 text-center border-2 border-dashed">
+                <Inbox className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-500 dark:text-slate-300 font-medium">Keine Nachrichten</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -274,8 +303,8 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                       }}
                       className={`p-4 rounded-xl cursor-pointer transition-all ${
                         message.is_read
-                          ? 'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                          : 'bg-blue-50 border-2 border-blue-300 hover:border-blue-400 shadow-sm'
+                          ? 'surface border border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm'
+                          : 'bg-blue-50 dark:bg-blue-950/20 border-2 border-blue-300 dark:border-blue-900/50 hover:border-blue-400 dark:hover:border-blue-800 shadow-sm'
                       }`}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -285,7 +314,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                               sender?.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
                             }`}
                           ></div>
-                          <span className="font-bold text-slate-900">{sender?.name}</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-100">{sender?.name}</span>
                           {!message.is_read && (
                             <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-md font-bold shadow-sm">
                               NEU
@@ -299,8 +328,8 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                           }}
                           className={`p-1.5 rounded-lg transition-colors ${
                             message.is_read
-                              ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                              : 'text-blue-600 hover:bg-blue-100'
+                              ? 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200'
+                              : 'text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/30'
                           }`}
                           title={message.is_read ? 'Als ungelesen markieren' : 'Als gelesen markieren'}
                         >
@@ -312,10 +341,10 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                         </button>
                       </div>
                       <p className={`text-sm mb-1.5 ${
-                        message.is_read ? 'font-medium text-slate-800' : 'font-bold text-slate-900'
+                        message.is_read ? 'font-medium text-slate-800 dark:text-slate-100' : 'font-bold text-slate-900 dark:text-slate-100'
                       }`}>{message.subject}</p>
-                      <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
-                      <p className="text-slate-400 text-xs mt-2.5 flex items-center gap-1">
+                      <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
+                      <p className="text-slate-400 dark:text-slate-400 text-xs mt-2.5 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(message.created_at).toLocaleDateString('de-DE', {
                           day: '2-digit',
@@ -332,13 +361,13 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
             )}
 
             <div className="flex items-center gap-2.5 mt-8">
-              <Send className="w-5 h-5 text-slate-700" />
-              <h3 className="text-lg font-bold text-slate-900">Gesendet</h3>
+              <Send className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Gesendet</h3>
             </div>
             {sent.length === 0 ? (
-              <div className="bg-slate-50 rounded-xl p-12 text-center border-2 border-dashed border-slate-200">
-                <Send className="w-16 h-16 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 font-medium">Keine gesendeten Nachrichten</p>
+              <div className="surface-muted rounded-xl p-12 text-center border-2 border-dashed">
+                <Send className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-500 dark:text-slate-300 font-medium">Keine gesendeten Nachrichten</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -348,7 +377,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                     <div
                       key={message.id}
                       onClick={() => setSelectedMessage(message)}
-                      className="p-4 bg-white rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition-all hover:shadow-sm"
+                      className="p-4 surface rounded-xl border border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer transition-all hover:shadow-sm"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -357,12 +386,12 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                               recipient?.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
                             }`}
                           ></div>
-                          <span className="font-bold text-slate-900">An: {recipient?.name}</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-100">An: {recipient?.name}</span>
                         </div>
                       </div>
-                      <p className="font-medium text-slate-800 text-sm mb-1.5">{message.subject}</p>
-                      <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
-                      <p className="text-slate-400 text-xs mt-2.5 flex items-center gap-1">
+                      <p className="font-medium text-slate-800 dark:text-slate-100 text-sm mb-1.5">{message.subject}</p>
+                      <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
+                      <p className="text-slate-400 dark:text-slate-400 text-xs mt-2.5 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(message.created_at).toLocaleDateString('de-DE', {
                           day: '2-digit',
@@ -381,13 +410,13 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
 
           <div>
             {showCompose ? (
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="surface rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                       <Send className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                       {replyTo ? 'Antworten' : 'Neue Nachricht'}
                     </h3>
                   </div>
@@ -396,18 +425,18 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                       setShowCompose(false);
                       setReplyTo(null);
                     }}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">An:</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">An:</label>
                     <select
                       value={composeForm.to_profile_id}
                       onChange={(e) => setComposeForm({ ...composeForm, to_profile_id: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className="w-full px-3 py-2.5 surface border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-slate-900 dark:text-slate-100"
                       disabled={!!replyTo}
                     >
                       <option value="">Empfänger wählen</option>
@@ -421,21 +450,21 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Betreff:</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Betreff:</label>
                     <input
                       type="text"
                       value={composeForm.subject}
                       onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className="w-full px-3 py-2.5 surface border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       placeholder="Betreff eingeben"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Nachricht:</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Nachricht:</label>
                     <textarea
                       value={composeForm.content}
                       onChange={(e) => setComposeForm({ ...composeForm, content: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                      className="w-full px-3 py-2.5 surface border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       rows={8}
                       placeholder="Nachricht eingeben"
                     />
@@ -450,50 +479,50 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                 </div>
               </div>
             ) : selectedMessage ? (
-              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="surface rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                      <MessageSquare className="w-5 h-5 text-slate-600" />
+                    <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+                      <MessageSquare className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">Nachricht</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Nachricht</h3>
                   </div>
                   <button
                     onClick={() => setSelectedMessage(null)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="space-y-5">
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           selectedMessage.from_profile_id === currentProfile.id
                             ? getProfileById(selectedMessage.to_profile_id)?.color === 'blue'
-                              ? 'bg-blue-100'
-                              : 'bg-green-100'
+                              ? 'bg-blue-100 dark:bg-blue-950/30'
+                              : 'bg-green-100 dark:bg-green-950/30'
                             : getProfileById(selectedMessage.from_profile_id)?.color === 'blue'
-                              ? 'bg-blue-100'
-                              : 'bg-green-100'
+                              ? 'bg-blue-100 dark:bg-blue-950/30'
+                              : 'bg-green-100 dark:bg-green-950/30'
                         }`}
                       >
                         <User className={`w-5 h-5 ${
                           selectedMessage.from_profile_id === currentProfile.id
                             ? getProfileById(selectedMessage.to_profile_id)?.color === 'blue'
-                              ? 'text-blue-600'
-                              : 'text-green-600'
+                              ? 'text-blue-600 dark:text-blue-200'
+                              : 'text-green-600 dark:text-green-200'
                             : getProfileById(selectedMessage.from_profile_id)?.color === 'blue'
-                              ? 'text-blue-600'
-                              : 'text-green-600'
+                              ? 'text-blue-600 dark:text-blue-200'
+                              : 'text-green-600 dark:text-green-200'
                         }`} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-0.5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
                           {selectedMessage.from_profile_id === currentProfile.id ? 'An' : 'Von'}
                         </p>
-                        <span className="font-bold text-slate-900">
+                        <span className="font-bold text-slate-900 dark:text-slate-100">
                           {selectedMessage.from_profile_id === currentProfile.id
                             ? getProfileById(selectedMessage.to_profile_id)?.name
                             : getProfileById(selectedMessage.from_profile_id)?.name}
@@ -504,7 +533,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                       {selectedMessage.to_profile_id === currentProfile.id && (
                         <button
                           onClick={() => handleReply(selectedMessage)}
-                          className="px-4 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all flex items-center gap-2 font-medium"
+                          className="px-4 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 rounded-lg transition-all flex items-center gap-2 font-medium"
                         >
                           <Reply className="w-4 h-4" />
                           Antworten
@@ -512,14 +541,14 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                       )}
                       <button
                         onClick={() => deleteMessage(selectedMessage.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
                       <Calendar className="w-4 h-4" />
                       {new Date(selectedMessage.created_at).toLocaleDateString('de-DE', {
                         weekday: 'long',
@@ -530,20 +559,20 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                         minute: '2-digit'
                       })}
                     </div>
-                    <h4 className="text-xl font-bold text-slate-900 mb-4">{selectedMessage.subject}</h4>
-                    <div className="bg-slate-50 rounded-lg p-4 border-l-4 border-blue-500">
-                      <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{selectedMessage.content}</p>
+                    <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">{selectedMessage.subject}</h4>
+                    <div className="bg-slate-50 dark:bg-slate-900/40 rounded-lg p-4 border-l-4 border-blue-500">
+                      <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{selectedMessage.content}</p>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 p-16 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
-                <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-200">
-                  <MessageSquare className="w-10 h-10 text-slate-400" />
+              <div className="bg-slate-50 dark:bg-slate-900/40 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 p-16 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
+                <div className="w-20 h-20 surface rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-200 dark:border-slate-700">
+                  <MessageSquare className="w-10 h-10 text-slate-400 dark:text-slate-500" />
                 </div>
-                <p className="text-base font-semibold text-slate-700 mb-1">Keine Nachricht ausgewählt</p>
-                <p className="text-sm text-slate-500">Wähle eine Nachricht aus oder schreibe eine neue</p>
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-1">Keine Nachricht ausgewählt</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Wähle eine Nachricht aus oder schreibe eine neue</p>
               </div>
             )}
           </div>
@@ -553,10 +582,10 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
       {activeTab === 'history' && (
         <div className="space-y-3">
           {activityLog.length === 0 ? (
-            <div className="bg-slate-50 rounded-xl p-16 text-center border-2 border-dashed border-slate-200">
-              <History className="w-16 h-16 text-slate-300 mx-auto mb-3" />
-              <p className="text-base font-medium text-slate-700 mb-1">Keine Aktivitäten</p>
-              <p className="text-sm text-slate-500">Der Verlauf ist leer</p>
+            <div className="bg-slate-50 dark:bg-slate-900/40 rounded-xl p-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-700">
+              <History className="w-16 h-16 text-slate-300 dark:text-slate-500 mx-auto mb-3" />
+              <p className="text-base font-medium text-slate-700 dark:text-slate-200 mb-1">Keine Aktivitäten</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Der Verlauf ist leer</p>
             </div>
           ) : (
             activityLog.map(activity => {
@@ -564,20 +593,20 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
               return (
                 <div
                   key={activity.id}
-                  className="p-4 bg-white rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all"
+                  className="p-4 surface rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className={`p-2.5 rounded-lg ${
-                      activity.activity_type.includes('assignment') ? 'bg-blue-100 text-blue-600' :
-                      activity.activity_type.includes('handover') ? 'bg-orange-100 text-orange-600' :
-                      activity.activity_type.includes('message') ? 'bg-emerald-100 text-emerald-600' :
-                      'bg-slate-100 text-slate-600'
+                      activity.activity_type.includes('assignment') ? 'bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-200' :
+                      activity.activity_type.includes('handover') ? 'bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-200' :
+                      activity.activity_type.includes('message') ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-200' :
+                      'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}>
                       {getActivityIcon(activity.activity_type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-slate-900 font-medium mb-2 leading-relaxed">{activity.description}</p>
-                      <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-500">
+                      <p className="text-slate-900 dark:text-slate-100 font-medium mb-2 leading-relaxed">{activity.description}</p>
+                      <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
                         {actor && (
                           <span className="flex items-center gap-1.5">
                             <div
@@ -585,7 +614,7 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate }: Notif
                                 actor.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
                               }`}
                             ></div>
-                            <span className="font-medium">{actor.name}</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300">{actor.name}</span>
                           </span>
                         )}
                         <span className="flex items-center gap-1">
