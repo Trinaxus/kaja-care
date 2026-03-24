@@ -20,7 +20,15 @@ foreach (($store['users'] ?? []) as $user) {
 
     $id = isset($user['id']) && (string) $user['id'] !== ''
         ? (string) $user['id']
-        : user_id_from_email((string) ($user['email'] ?? ''));
+        : '';
+
+    if ($id === '') {
+        $email = (string) ($user['email'] ?? '');
+        if (trim($email) === '') {
+            continue;
+        }
+        $id = user_id_from_email($email);
+    }
 
     $out[] = [
         'id' => $id,

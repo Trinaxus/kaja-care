@@ -315,10 +315,9 @@ export function EnhancedCalendarView({ profiles, currentProfile, onUpdate }: Enh
               className={`
                 min-h-32 rounded-xl border-2 transition cursor-pointer relative overflow-hidden
                 ${!isCurrentMonth(date) ? 'opacity-40' : ''}
-                ${isToday(date) ? 'ring-2 ring-blue-400 ring-offset-2' : ''}
-                ${isSelected ? 'border-blue-500' : 'border-slate-200 hover:border-slate-300'}
-                ${!handover && caretaker?.color === 'blue' && !isSelected ? 'border-blue-300' : ''}
-                ${!handover && caretaker?.color === 'green' && !isSelected ? 'border-green-300' : ''}
+                ${isSelected ? 'border-blue-500' : isToday(date) ? 'border-orange-400 dark:border-orange-500 hover:border-orange-500 dark:hover:border-orange-400' : 'border-slate-200 hover:border-slate-300'}
+                ${!handover && caretaker?.color === 'blue' && !isSelected && !isToday(date) ? 'border-blue-300' : ''}
+                ${!handover && caretaker?.color === 'green' && !isSelected && !isToday(date) ? 'border-green-300' : ''}
               `}
             >
               {handover ? (
@@ -364,38 +363,38 @@ export function EnhancedCalendarView({ profiles, currentProfile, onUpdate }: Enh
                   {absences.map((absence, idx) => {
                     const person = getProfileById(absence.user_id);
                     return (
-                      <div key={idx} className="flex items-center gap-1 text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded" title={`${person?.name}: ${absence.reason || 'Abwesend'}`}>
-                        <UserX className="w-3 h-3 flex-shrink-0" />
+                      <div key={idx} className="flex items-center gap-1 text-[9px] sm:text-xs bg-orange-100 text-orange-800 px-1 py-0.5 sm:px-1.5 rounded" title={`${person?.name}: ${absence.reason || 'Abwesend'}`}>
+                        <UserX className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
                         <span className="truncate">{person?.name}</span>
                         {!absence.is_full_day && (
-                          <Clock className="w-3 h-3 flex-shrink-0" />
+                          <Clock className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
                         )}
                       </div>
                     );
                   })}
                   <div className="flex flex-wrap gap-1">
                     {handover && (
-                      <div className="flex items-center gap-1 text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded" title="Übergabe">
-                        <ArrowLeftRight className="w-3 h-3" />
+                      <div className="flex items-center gap-1 text-[9px] sm:text-xs bg-amber-100 text-amber-800 px-1 py-0.5 sm:px-1.5 rounded" title="Übergabe">
+                        <ArrowLeftRight className="w-2 h-2 sm:w-3 sm:h-3" />
                       </div>
                     )}
                     {events.some(e => e.event_type === 'vet') && (
-                      <div className="flex items-center gap-1 text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded" title="Tierarzt">
-                        <Syringe className="w-3 h-3" />
+                      <div className="flex items-center gap-1 text-[9px] sm:text-xs bg-red-100 text-red-800 px-1 py-0.5 sm:px-1.5 rounded" title="Tierarzt">
+                        <Syringe className="w-2 h-2 sm:w-3 sm:h-3" />
                       </div>
                     )}
                     {hasImportantNotes && (
-                      <div className="flex items-center gap-1 text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded" title="Wichtige Notiz">
-                        <AlertCircle className="w-3 h-3" />
+                      <div className="flex items-center gap-1 text-[9px] sm:text-xs bg-red-100 text-red-800 px-1 py-0.5 sm:px-1.5 rounded" title="Wichtige Notiz">
+                        <AlertCircle className="w-2 h-2 sm:w-3 sm:h-3" />
                       </div>
                     )}
                     {hasNotes && !hasImportantNotes && (
-                      <div className="flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded" title="Notiz">
-                        <StickyNote className="w-3 h-3" />
+                      <div className="flex items-center gap-1 text-[9px] sm:text-xs bg-slate-100 text-slate-600 px-1 py-0.5 sm:px-1.5 rounded" title="Notiz">
+                        <StickyNote className="w-2 h-2 sm:w-3 sm:h-3" />
                       </div>
                     )}
                     {events.length > 0 && !events.some(e => e.event_type === 'vet') && (
-                      <div className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                      <div className="text-[9px] sm:text-xs bg-slate-100 text-slate-600 px-1 py-0.5 sm:px-1.5 rounded">
                         {events.length}
                       </div>
                     )}

@@ -52,6 +52,72 @@ if ($method === 'POST') {
     $userType = isset($payload['userType']) ? trim((string) $payload['userType']) : 'audience';
     $color = isset($payload['color']) ? trim((string) $payload['color']) : 'blue';
 
+    if ($email === '') {
+        if ($displayName === '') {
+            json_response([
+                'success' => false,
+                'message' => 'displayName required',
+            ], 400);
+        }
+
+        $store = get_users_store();
+
+        $id = '';
+        for ($i = 0; $i < 5; $i++) {
+            $candidate = 'local-' . substr(sha1((string) microtime(true) . '|' . (string) random_int(0, PHP_INT_MAX)), 0, 24);
+            $exists = false;
+
+            foreach ($store['users'] as $u) {
+                if (!is_array($u)) {
+                    continue;
+                }
+                $uid = isset($u['id']) && (string) $u['id'] !== '' ? (string) $u['id'] : user_id_from_email((string) ($u['email'] ?? ''));
+                if ($uid === $candidate) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            if (!$exists) {
+                $id = $candidate;
+                break;
+            }
+        }
+
+        if ($id === '') {
+            json_response([
+                'success' => false,
+                'message' => 'Could not generate user id',
+            ], 500);
+        }
+
+        $store['users'][] = [
+            'id' => $id,
+            'email' => '',
+            'displayName' => $displayName,
+            'accessRole' => $accessRole,
+            'userType' => $userType,
+            'color' => $color,
+            'disabled' => false,
+        ];
+
+        save_users_store($store);
+        ensure_user_data_dirs($id);
+
+        json_response([
+            'success' => true,
+            'user' => [
+                'id' => $id,
+                'email' => '',
+                'displayName' => $displayName,
+                'accessRole' => $accessRole,
+                'userType' => $userType,
+                'color' => $color,
+                'disabled' => false,
+            ],
+        ], 201);
+    }
+
     if ($email === '' || $password === '' || $displayName === '') {
         json_response([
             'success' => false,

@@ -861,8 +861,6 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
               if (caretaker) {
                 return profileColorClass(caretaker, 'tile');
               }
-
-              if (isToday(day.date)) return 'bg-gradient-to-br from-amber-50 via-amber-25 to-white ring-2 ring-inset ring-amber-400 shadow-md dark:from-amber-950/30 dark:to-slate-900/40';
               if (new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6) return 'bg-slate-50/50 dark:bg-slate-950/25';
               return 'bg-white hover:bg-slate-50 hover:shadow-sm dark:bg-slate-950/10 dark:hover:bg-slate-900/40';
             };
@@ -907,7 +905,9 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     });
                   }
                 }}
-                className={`min-h-32 p-3 cursor-pointer transition-all duration-200 relative group ${getTileBackgroundClass()}`}
+                className={`min-h-32 p-3 cursor-pointer transition-all duration-200 relative group ${getTileBackgroundClass()} ${
+                  isToday(day.date) && !isSelected ? 'ring-2 ring-inset ring-orange-400 dark:ring-orange-500' : ''
+                }`}
               >
                 {day.handover && isCurrentMonth(day.date) && (() => {
                   const fromProfile = getProfileById(day.handover.from_user_id);
@@ -928,7 +928,6 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                 <div className="flex items-start justify-between mb-2 relative z-10">
                   <span className={`text-sm font-semibold relative z-10 ${
                     !isCurrentMonth(day.date) ? 'text-slate-400' :
-                    isToday(day.date) ? 'w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md ring-2 ring-amber-300 scale-110' :
                     new Date(day.date).getDay() === 0 || new Date(day.date).getDay() === 6 ? 'text-slate-500' :
                     'text-slate-700'
                   }`}>

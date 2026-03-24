@@ -45,6 +45,12 @@ export function SettingsPanel() {
   const [error, setError] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [newUser, setNewUser] = useState<{ displayName: string; accessRole: string; color: string }>(() => ({
+    displayName: '',
+    accessRole: 'user',
+    color: 'blue'
+  }));
 
   const load = async () => {
     if (!baseUrl) {
@@ -82,6 +88,49 @@ export function SettingsPanel() {
     } catch (e: any) {
       setStatus('error');
       setError(e?.message || 'User-Liste konnte nicht geladen werden');
+    }
+  };
+
+  const createLocalUser = async () => {
+    if (!baseUrl || !token) return;
+
+    const displayName = (newUser.displayName || '').trim();
+    if (!displayName) {
+      setError('Bitte einen Namen angeben.');
+      return;
+    }
+
+    setCreating(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${baseUrl}/api/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: '',
+          displayName,
+          accessRole: newUser.accessRole,
+          userType: 'audience',
+          color: newUser.color
+        })
+      });
+
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'User konnte nicht erstellt werden');
+      }
+
+      setNewUser({ displayName: '', accessRole: 'user', color: 'blue' });
+      await load();
+      window.dispatchEvent(new Event('kc-users-updated'));
+    } catch (e: any) {
+      setError(e?.message || 'User konnte nicht erstellt werden');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -159,6 +208,62 @@ export function SettingsPanel() {
       </div>
 
       {error && <div className="text-red-700 dark:text-red-300 font-medium">{error}</div>}
+
+      <div className="bg-white/60 dark:bg-slate-950/30 border border-white/40 dark:border-slate-800 rounded-2xl p-5">
+        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">User hinzufügen (ohne E-Mail)</div>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="sm:col-span-1">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Name</label>
+            <input
+              className="input-field"
+              value={newUser.displayName}
+              onChange={(e) => setNewUser((p) => ({ ...p, displayName: e.target.value }))}
+              placeholder="z.B. Gast / Hundesitter"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Rolle</label>
+            <select
+              className="input-field dark:[color-scheme:dark]"
+              value={newUser.accessRole}
+              onChange={(e) => setNewUser((p) => ({ ...p, accessRole: e.target.value }))}
+            >
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Farbe</label>
+            <div className="relative">
+              <span
+                className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full ${
+                  COLOR_DOT_CLASS[(newUser.color as (typeof COLORS)[number]) || 'blue']
+                }`}
+                aria-hidden="true"
+              />
+              <select
+                className="input-field pl-10 dark:[color-scheme:dark]"
+                value={newUser.color}
+                onChange={(e) => setNewUser((p) => ({ ...p, color: e.target.value }))}
+              >
+                {COLORS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-end">
+          <button className="btn-primary" type="button" onClick={createLocalUser} disabled={creating}>
+            {creating ? 'Erstelle…' : 'User erstellen'}
+          </button>
+        </div>
+      </div>
 
       <div className="space-y-3">
         {users.map((u) => (
