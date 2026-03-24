@@ -1,0 +1,24 @@
+# CORS Headers are now handled in PHP
+
+RewriteEngine On
+
+# API Router: /api/<path> -> /api/index.php?path=<path>
+RewriteRule ^api/(.+)$ api/index.php?path=$1 [QSA,L]
+
+<Files ".env">
+  Require all denied
+</Files>
+
+<Files "users.php">
+  Require all denied
+</Files>
+
+<Files "outusers.php">
+  Require all denied
+</Files>
+
+# HTTP zu HTTPS umleiten
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+Header set Accept-Ranges bytes

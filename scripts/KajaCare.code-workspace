@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "KajaCare",
+			"path": ".."
+		},
+		{
+			"name": "supabase",
+			"path": "../../../../../../Users/dennislach_macbook_neu/Downloads/KajaCare/supabase"
+		},
+		{
+			"name": "migrations",
+			"path": "../../../../../../Users/dennislach_macbook_neu/.Trash/migrations"
+		}
+	],
+	"settings": {}
+}
