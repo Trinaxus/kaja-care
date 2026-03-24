@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile, CareAssignment, CareDayEvent, Handover, Availability } from '../lib/database.types';
 import { ChevronLeft, ChevronRight, ArrowLeftRight, Syringe, StickyNote, AlertCircle, UserX, Clock } from 'lucide-react';
 import { DayDetailModal } from './DayDetailModal';

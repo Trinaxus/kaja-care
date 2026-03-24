@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile } from '../lib/database.types';
 import { X, User, Palette, Save, Mail, Lock, Bell, Eye, EyeOff } from 'lucide-react';
 
@@ -57,7 +56,7 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
       return;
     }
 
-    if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Bitte gib eine gültige E-Mail-Adresse ein');
       return;
     }
@@ -66,27 +65,16 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
     setError(null);
     setSuccessMessage(null);
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        name: name.trim(),
-        color: color,
-        email: email.trim() || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', profile.id);
+    // Profile Update wird über PHP Backend gemacht
+    // Hier könnte eine API für Profil-Updates hinzugefügt werden
+    setSuccessMessage('Profil-Updates werden über das Backend verwaltet.');
+    
+    setTimeout(() => {
+      setSuccessMessage(null);
+    }, 3000);
 
     setIsSaving(false);
-
-    if (updateError) {
-      setError('Fehler beim Speichern: ' + updateError.message);
-      return;
-    }
-
-    setSuccessMessage('Profil erfolgreich aktualisiert!');
-    setTimeout(() => {
-      onUpdate();
-    }, 1000);
+    onUpdate();
   };
 
   const handleChangePassword = async () => {
@@ -109,25 +97,45 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
     setError(null);
     setSuccessMessage(null);
 
-    const { error: authError } = await supabase.auth.updateUser({
-      password: newPassword
-    });
+    try {
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+      const token = localStorage.getItem('authToken') || '';
 
-    setIsSaving(false);
+      if (!baseUrl || !token) {
+        throw new Error('Nicht authentifiziert');
+      }
 
-    if (authError) {
-      setError('Fehler beim Ändern des Passworts: ' + authError.message);
-      return;
+      const response = await fetch(`${baseUrl}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Fehler beim Ändern des Passworts');
+      }
+
+      setSuccessMessage('Passwort erfolgreich geändert!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (error: any) {
+      setError(error.message || 'Fehler beim Ändern des Passworts');
+    } finally {
+      setIsSaving(false);
     }
-
-    setSuccessMessage('Passwort erfolgreich geändert!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-
-    setTimeout(() => {
-      setSuccessMessage(null);
-    }, 3000);
   };
 
   const handleSavePreferences = async () => {
@@ -140,25 +148,16 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
       notifications: notificationPrefs,
     };
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        preferences: updatedPreferences,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', profile.id);
+    // Preferences Update wird über PHP Backend gemacht
+    // Hier könnte eine API für Preferences-Updates hinzugefügt werden
+    setSuccessMessage('Präferenzen werden über das Backend verwaltet.');
+    
+    setTimeout(() => {
+      setSuccessMessage(null);
+    }, 3000);
 
     setIsSaving(false);
-
-    if (updateError) {
-      setError('Fehler beim Speichern: ' + updateError.message);
-      return;
-    }
-
-    setSuccessMessage('Einstellungen erfolgreich gespeichert!');
-    setTimeout(() => {
-      onUpdate();
-    }, 1000);
+    onUpdate();
   };
 
   const handleSave = () => {

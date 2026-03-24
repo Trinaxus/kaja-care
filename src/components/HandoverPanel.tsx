@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile, Handover, CareAssignment } from '../lib/database.types';
 import {
   ArrowRightLeft,
@@ -38,66 +37,101 @@ export function HandoverPanel({ profiles, currentProfile, onUpdate }: HandoverPa
   }, []);
 
   const loadHandovers = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    try {
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+      const token = localStorage.getItem('authToken') || '';
 
-    const { data } = await supabase
-      .from('handovers')
-      .select('*')
-      .gte('date', today)
-      .order('date', { ascending: true });
+      if (!baseUrl || !token) {
+        console.error('Nicht authentifiziert');
+        return;
+      }
 
-    if (data) setHandovers(data);
+      const today = new Date().toISOString().split('T')[0];
+
+      const response = await fetch(`${baseUrl}/api/handovers?from=${today}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setHandovers(result.handovers || []);
+      }
+    } catch (error) {
+      console.error('Error loading handovers:', error);
+    }
   };
 
   const detectHandovers = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    const next60Days = Array.from({ length: 60 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      return date.toISOString().split('T')[0];
-    });
+    try {
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+      const token = localStorage.getItem('authToken') || '';
 
-    const { data: assignments } = await supabase
-      .from('care_assignments')
-      .select('*')
-      .in('date', next60Days)
-      .order('date', { ascending: true });
+      if (!baseUrl || !token) {
+        console.error('Nicht authentifiziert');
+        return;
+      }
 
-    if (!assignments || assignments.length < 2) return;
+      const today = new Date().toISOString().split('T')[0];
+      const next60Days = Array.from({ length: 60 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        return date.toISOString().split('T')[0];
+      });
 
-    const handoverDates: Set<string> = new Set();
-    for (let i = 1; i < assignments.length; i++) {
-      if (assignments[i].caretaker_id !== assignments[i - 1].caretaker_id) {
-        if (assignments[i].date >= today) {
-          handoverDates.add(assignments[i].date);
+      const response = await fetch(`${baseUrl}/api/assignments?dates=${next60Days.join(',')}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.assignments) {
+        return;
+      }
+
+      const assignments = result.assignments;
+      if (assignments.length < 2) return;
+
+      const handoverDates: Set<string> = new Set();
+      for (let i = 1; i < assignments.length; i++) {
+        if (assignments[i].caretaker_id !== assignments[i - 1].caretaker_id) {
+          if (assignments[i].date >= today) {
+            handoverDates.add(assignments[i].date);
+          }
         }
       }
-    }
 
-    for (const date of handoverDates) {
-      const assignment = assignments.find(a => a.date === date);
-      const prevAssignment = assignments.find(
-        a => new Date(a.date) < new Date(date) && a.caretaker_id !== assignment?.caretaker_id
-      );
+      for (const date of handoverDates) {
+        const assignment = assignments.find((a: any) => a.date === date);
+        const prevAssignment = assignments.find(
+          (a: any) => new Date(a.date) < new Date(date) && a.caretaker_id !== assignment?.caretaker_id
+        );
 
-      if (assignment && prevAssignment) {
-        const { data: existing } = await supabase
-          .from('handovers')
-          .select('id')
-          .eq('date', date)
-          .maybeSingle();
+        if (!assignment || !prevAssignment) continue;
 
-        if (!existing) {
-          await supabase.from('handovers').insert({
-            date,
-            from_user_id: prevAssignment.caretaker_id,
-            to_user_id: assignment.caretaker_id,
-          });
-        }
+        const existingHandover = handovers.find(h => h.date === date);
+        if (existingHandover) continue;
+
+        const newHandover = {
+          date,
+          from_user_id: prevAssignment.caretaker_id,
+          to_user_id: assignment.caretaker_id,
+          brings_user_id: null,
+          picks_up_user_id: null,
+          time: null,
+          location: null,
+          notes: 'Automatisch erkannt',
+        };
+
+        await handleCreateHandoverWithData(newHandover);
       }
+    } catch (error) {
+      console.error('Error detecting handovers:', error);
     }
-
-    await loadHandovers();
   };
 
   const handleCreateHandover = async () => {

@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { User } from '@supabase/supabase-js';
 import { X, Brain, Calendar, TrendingUp, Zap, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 interface Profile {
   id: string;

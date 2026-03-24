@@ -73,6 +73,10 @@ switch ($path) {
         require __DIR__ . '/routes/collections.php';
         break;
 
+    case 'auth/change-password':
+        require __DIR__ . '/routes/change_password.php';
+        break;
+
     case 'calendar/ics':
         $routeFile = __DIR__ . '/routes/calendar_ics.php';
         if (!is_file($routeFile)) {

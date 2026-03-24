@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { X, Clock, Calendar, MessageSquare, CreditCard as Edit2, Trash2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import type { Profile, Availability } from '../lib/database.types';
 
 interface AvailabilityModalProps {
@@ -65,18 +64,51 @@ export function AvailabilityModal({
       }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('availability')
-          .update(availability)
-          .eq('id', editingId);
+        const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+        const token = localStorage.getItem('authToken') || '';
 
-        if (error) throw error;
+        if (!baseUrl || !token) {
+          throw new Error('Nicht authentifiziert');
+        }
+
+        const response = await fetch(`${baseUrl}/api/availability/${editingId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(availability)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Fehler beim Aktualisieren der Verfügbarkeit');
+        }
       } else {
-        const { error } = await supabase
-          .from('availability')
-          .insert(availability);
+        const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+        const token = localStorage.getItem('authToken') || '';
 
-        if (error) throw error;
+        if (!baseUrl || !token) {
+          throw new Error('Nicht authentifiziert');
+        }
+
+        const response = await fetch(`${baseUrl}/api/availability`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            entries: [availability]
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Fehler beim Erstellen der Verfügbarkeit');
+        }
       }
 
       handleCancelEdit();
@@ -93,12 +125,25 @@ export function AvailabilityModal({
     if (!confirm('Diesen Eintrag wirklich löschen?')) return;
 
     try {
-      const { error } = await supabase
-        .from('availability')
-        .delete()
-        .eq('id', id);
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+      const token = localStorage.getItem('authToken') || '';
 
-      if (error) throw error;
+      if (!baseUrl || !token) {
+        throw new Error('Nicht authentifiziert');
+      }
+
+      const response = await fetch(`${baseUrl}/api/availability/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Fehler beim Löschen der Verfügbarkeit');
+      }
 
       if (editingId === id) {
         handleCancelEdit();
@@ -114,13 +159,25 @@ export function AvailabilityModal({
     if (!confirm('Alle Einträge für diesen Tag wirklich löschen?')) return;
 
     try {
-      const { error } = await supabase
-        .from('availability')
-        .delete()
-        .eq('user_id', currentProfile.id)
-        .eq('date', date);
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+      const token = localStorage.getItem('authToken') || '';
 
-      if (error) throw error;
+      if (!baseUrl || !token) {
+        throw new Error('Nicht authentifiziert');
+      }
+
+      const response = await fetch(`${baseUrl}/api/availability?user_id=${currentProfile.id}&date=${date}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Fehler beim Löschen aller Einträge');
+      }
 
       handleCancelEdit();
       onSave();

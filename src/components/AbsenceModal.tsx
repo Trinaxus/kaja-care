@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile } from '../lib/database.types';
 import { X, UserX, Calendar } from 'lucide-react';
 
@@ -31,41 +30,63 @@ export function AbsenceModal({ profiles, onClose, onUpdate }: AbsenceModalProps)
 
     setIsSubmitting(true);
 
-    const startDate = new Date(absence.start_date + 'T00:00:00');
-    const endDate = new Date(absence.end_date + 'T00:00:00');
-    const absenceEntries = [];
+    try {
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL as string | undefined;
+      const token = localStorage.getItem('authToken') || '';
 
-    const currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const day = String(currentDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
+      if (!baseUrl || !token) {
+        throw new Error('Nicht authentifiziert');
+      }
 
-      absenceEntries.push({
-        user_id: absence.user_id,
-        date: dateString,
-        type: 'unavailable' as const,
-        is_full_day: absence.is_full_day,
-        start_time: absence.is_full_day ? null : absence.start_time,
-        end_time: absence.is_full_day ? null : absence.end_time,
-        reason: absence.reason || null
+      const startDate = new Date(absence.start_date + 'T00:00:00');
+      const endDate = new Date(absence.end_date + 'T00:00:00');
+      const absenceEntries = [];
+
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
+        absenceEntries.push({
+          user_id: absence.user_id,
+          date: dateString,
+          type: 'unavailable' as const,
+          is_full_day: absence.is_full_day,
+          start_time: absence.is_full_day ? null : absence.start_time,
+          end_time: absence.is_full_day ? null : absence.end_time,
+          reason: absence.reason || null
+        });
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const response = await fetch(`${baseUrl}/api/availability`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          entries: absenceEntries
+        })
       });
 
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+      const result = await response.json();
 
-    const { error } = await supabase.from('availability').insert(absenceEntries);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Fehler beim Eintragen der Abwesenheit');
+      }
 
-    if (error) {
-      console.error('Error creating absence:', error);
-      alert('Fehler beim Eintragen der Abwesenheit');
-    } else {
       onUpdate();
       onClose();
+    } catch (error: any) {
+      console.error('Error creating absence:', error);
+      alert(error.message || 'Fehler beim Eintragen der Abwesenheit');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   const selectedProfile = profiles?.find(p => p.id === absence.user_id);

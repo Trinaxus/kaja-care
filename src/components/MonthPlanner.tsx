@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, Availability } from '../lib/database.types';
 import {
   ChevronLeft,
