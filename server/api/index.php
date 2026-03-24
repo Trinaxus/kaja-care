@@ -74,6 +74,8 @@ switch ($path) {
         break;
 
     case 'auth/change-password':
+        // Debug: Log that we reached this route
+        error_log('DEBUG: auth/change-password route reached');
         require __DIR__ . '/routes/change_password.php';
         break;
 
@@ -89,6 +91,8 @@ switch ($path) {
         break;
 
     default:
+        // Debug: Log the path that was not found
+        error_log('DEBUG: Route not found: ' . $path);
         json_response([
             'success' => false,
             'message' => 'Not found',
