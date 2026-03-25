@@ -107,5 +107,6 @@ json_response([
         'email' => (string) ($updated['email'] ?? ''),
         'displayName' => (string) $updated['displayName'],
         'color' => (string) (($updated['color'] ?? '') !== '' ? $updated['color'] : 'blue'),
+        'preferences' => (isset($updated['preferences']) && is_array($updated['preferences'])) ? $updated['preferences'] : new stdClass(),
     ],
 ]);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Profile } from '../lib/database.types';
 import { X, User, Palette, Save, Mail, Lock, Bell, Eye, EyeOff } from 'lucide-react';
 
@@ -45,6 +45,21 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
     handovers: preferences.notifications?.handovers ?? true,
     assignments: preferences.notifications?.assignments ?? true,
   });
+
+  // Update notification prefs when profile changes
+  useEffect(() => {
+    const updatedPreferences = typeof profile.preferences === 'object' && profile.preferences !== null
+      ? profile.preferences as any
+      : { notifications: { email: true, push: true, requests: true, handovers: true, assignments: true }, language: 'de', timezone: 'Europe/Berlin' };
+    
+    setNotificationPrefs({
+      email: updatedPreferences.notifications?.email ?? true,
+      push: updatedPreferences.notifications?.push ?? true,
+      requests: updatedPreferences.notifications?.requests ?? true,
+      handovers: updatedPreferences.notifications?.handovers ?? true,
+      assignments: updatedPreferences.notifications?.assignments ?? true
+    });
+  }, [profile.preferences]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -458,8 +473,8 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
-                    <p className="font-medium text-slate-900">Neue Anfragen</p>
-                    <p className="text-sm text-slate-600">Bei neuen Tausch-Anfragen</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">Neue Anfragen</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Bei neuen Tausch-Anfragen</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -474,8 +489,8 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
-                    <p className="font-medium text-slate-900">Übergaben</p>
-                    <p className="text-sm text-slate-600">Bei Änderungen an Übergaben</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">Übergaben</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Bei Änderungen an Übergaben</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -490,8 +505,8 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 rounded-lg">
                   <div>
-                    <p className="font-medium text-slate-900">Neue Zuteilungen</p>
-                    <p className="text-sm text-slate-600">Bei neuen Betreuungstagen</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">Neue Zuteilungen</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Bei neuen Betreuungstagen</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
