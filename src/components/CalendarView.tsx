@@ -934,10 +934,10 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     {new Date(day.date).getDate()}
                   </span>
                   <div className="flex gap-1.5 flex-wrap justify-end relative z-10">
-                    {day.hasImportantNotes && <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-3 h-3 text-red-600 dark:text-red-200" /></div>}
-                    {day.hasNotes && !day.hasImportantNotes && <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-3 h-3 text-blue-600 dark:text-blue-200" /></div>}
-                    {day.handover && <div className="w-5 h-5 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-3 h-3 text-orange-600 dark:text-orange-200" /></div>}
-                    {day.events.length > 0 && <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-3 h-3 text-blue-600 dark:text-blue-200" /></div>}
+                    {day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-600 dark:text-red-200" /></div>}
+                    {day.hasNotes && !day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
+                    {day.handover && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-600 dark:text-orange-200" /></div>}
+                    {day.events.length > 0 && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
                   </div>
                 </div>
 
@@ -963,7 +963,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                           {involvedProfiles.map((profile) => (
                             <div
                               key={profile.id}
-                              className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm flex-shrink-0 cursor-help ${profileColorClass(profile, 'solid')}`}
+                              className={`w-4 h-4 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[9px] sm:text-xs font-bold shadow-sm flex-shrink-0 cursor-help ${profileColorClass(profile, 'solid')}`}
                               title={`Übergabe: ${profile.name}`}
                             >
                               {profile.name.charAt(0)}
@@ -984,7 +984,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                   )}
                   {day.handover && (
                     <div
-                      className="flex items-center gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-full font-medium cursor-help max-w-full"
+                      className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-full font-medium cursor-help max-w-full leading-none"
                       title={`Übergabe um ${(day.handover.time || '12:00').substring(0, 5)}`}
                     >
                       <span className="truncate">
@@ -1028,7 +1028,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                       return visitor ? (
                         <div
                           key={visit.id}
-                          className="flex items-center gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-lg font-medium cursor-help max-w-full"
+                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-lg font-medium cursor-help max-w-full leading-none"
                           title={tooltipText}
                         >
                           <span>{visitTypeLabels[visit.visit_type as keyof typeof visitTypeLabels]}</span>
@@ -1057,10 +1057,10 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                       return absentProfile ? (
                         <div
                           key={absence.id}
-                          className="flex items-center gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-lg font-medium cursor-help max-w-full"
+                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-lg font-medium cursor-help max-w-full leading-none"
                           title={tooltipText}
                         >
-                          <UserX className="w-3 h-3" />
+                          <UserX className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                           <span className="hidden sm:inline truncate">{absentProfile.name}</span>
                           {!absence.is_full_day && absence.start_time && absence.end_time && (
                             <span className="opacity-75 truncate">
