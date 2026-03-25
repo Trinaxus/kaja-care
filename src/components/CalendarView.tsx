@@ -984,7 +984,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                   )}
                   {day.handover && (
                     <div
-                      className="flex items-center justify-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-full font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
+                      className="flex items-center justify-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
                       title={`Übergabe um ${(day.handover.time || '12:00').substring(0, 5)}`}
                     >
                       <span className="sm:whitespace-normal px-2 sm:px-0 inline-block">
@@ -994,10 +994,12 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                           const h = Number.parseInt(hh, 10);
                           const timeText = Number.isFinite(h) ? `${h} Uhr` : (t || '12:00').substring(0, 5);
                           const isLongText = timeText.length > 6;
-                          return (
-                            <span className={isLongText ? 'animate-slide-fast' : ''}>
-                              {timeText}
-                            </span>
+                          return isLongText ? (
+                            <div className="marquee">
+                              <span>{timeText}</span>
+                            </div>
+                          ) : (
+                            <span>{timeText}</span>
                           );
                         })()}
                       </span>
@@ -1033,23 +1035,14 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                       return visitor ? (
                         <div
                           key={visit.id}
-                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
+                          className={`flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 ${profileColorClass(visitor, 'solid')} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap`}
                           title={tooltipText}
                         >
                           <span className="px-2 sm:px-0 flex-shrink-0">{visitTypeLabels[visit.visit_type as keyof typeof visitTypeLabels]}</span>
-                          <span className="hidden sm:inline truncate px-2 sm:px-0 flex-1">{visitor.name}</span>
                           <span className="opacity-75 truncate flex-1">
-                            <span className="sm:hidden px-2 sm:px-0 inline-block">
-                              {(() => {
-                                const isLongText = mobileTime.length > 6;
-                                return (
-                                  <span className={isLongText ? 'animate-slide-fast' : ''}>
-                                    {mobileTime}
-                                  </span>
-                                );
-                              })()}
+                            <span className="px-2 sm:px-0 inline-block animate-slide-fast">
+                              {desktopTime}
                             </span>
-                            <span className="hidden sm:inline">{desktopTime}</span>
                           </span>
                         </div>
                       ) : null;
@@ -1071,28 +1064,24 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                       return absentProfile ? (
                         <div
                           key={absence.id}
-                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
+                          className={`flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 ${profileColorClass(absentProfile, 'solid')} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap`}
                           title={tooltipText}
                         >
                           <UserX className="w-3 h-3 sm:w-3 sm:h-3 flex-shrink-0" />
-                          <span className="hidden sm:inline truncate px-2 sm:px-0 flex-1">{absentProfile.name}</span>
-                          {!absence.is_full_day && absence.start_time && absence.end_time && (
+                          {absence.is_full_day ? (
                             <span className="opacity-75 truncate flex-1">
-                              <span className="sm:hidden px-2 sm:px-0 inline-block">
-                                {(() => {
-                                  const timeText = formatTime(absence.start_time);
-                                  const isLongText = timeText.length > 6;
-                                  return (
-                                    <span className={isLongText ? 'animate-slide-fast' : ''}>
-                                      {timeText}
-                                    </span>
-                                  );
-                                })()}
-                              </span>
-                              <span className="hidden sm:inline">
-                                {formatTime(absence.start_time)}-{formatTime(absence.end_time)}
+                              <span className="px-2 sm:px-0 inline-block animate-slide-fast">
+                                ganztägig abwesend
                               </span>
                             </span>
+                          ) : (
+                            absence.start_time && absence.end_time && (
+                              <span className="opacity-75 truncate flex-1">
+                                <span className="px-2 sm:px-0 inline-block animate-slide-fast">
+                                  {formatTime(absence.start_time)}-{formatTime(absence.end_time)}
+                                </span>
+                              </span>
+                            )
                           )}
                         </div>
                       ) : null;
