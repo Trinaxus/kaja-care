@@ -588,7 +588,94 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
           </div>
         </div>
 
-        <div className="surface rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        {activeView === 'calendar' && (
+          <div className="sm:hidden -mx-3">
+            <div className="surface border-y border-slate-200 dark:border-slate-700">
+              <div className="flex overflow-x-auto scrollbar-hide">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveView(item.id as any)}
+                    className={`relative flex-1 min-w-[80px] px-3 py-3 font-semibold text-sm transition-all duration-200 ${
+                      activeView === item.id
+                        ? 'text-blue-600 dark:text-blue-400 surface'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1.5">
+                      <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="absolute top-1.5 right-1.5 w-4.5 h-4.5 bg-orange-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-lg">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    {activeView === item.id && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 gradient-primary"></div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-3 pt-4">
+              <div className="flex items-center justify-between mb-4 gap-2">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Kalenderansicht</h2>
+                <div className="inline-flex rounded-lg border-2 border-slate-200 dark:border-slate-700 p-0.5 bg-slate-50 dark:bg-slate-950/30">
+                  <button
+                    onClick={() => setCalendarMode('month')}
+                    className={`px-3 py-1.5 rounded-md font-semibold text-sm transition-all duration-200 ${
+                      calendarMode === 'month'
+                        ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                        : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                    }`}
+                  >
+                    Monat
+                  </button>
+                  <button
+                    onClick={() => setCalendarMode('week')}
+                    className={`px-3 py-1.5 rounded-md font-semibold text-sm transition-all duration-200 ${
+                      calendarMode === 'week'
+                        ? 'surface text-slate-900 dark:text-slate-100 shadow-md'
+                        : 'surface text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                    }`}
+                  >
+                    Woche
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-0 pb-6">
+              {calendarMode === 'month' ? (
+                <CalendarView
+                  profiles={profiles}
+                  currentProfile={canonicalProfile}
+                  onUpdate={() => {
+                    loadDashboardData();
+                    calculateCareStats();
+                    setSelectedHandoverDate(null);
+                  }}
+                  onMonthChange={(date) => calculateCareStats(date)}
+                  initialDate={selectedHandoverDate || undefined}
+                />
+              ) : (
+                <WeekView
+                  profiles={profiles}
+                  currentProfile={canonicalProfile}
+                  onUpdate={() => {
+                    loadDashboardData();
+                    calculateCareStats();
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className={`surface rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 overflow-hidden ${
+          activeView === 'calendar' ? 'hidden sm:block' : ''
+        }`}>
           <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
             <div className="flex overflow-x-auto scrollbar-hide">
               {navItems.map((item) => (
