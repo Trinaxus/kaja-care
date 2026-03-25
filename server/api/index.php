@@ -90,6 +90,10 @@ switch ($path) {
         require $routeFile;
         break;
 
+    case 'update-profile':
+        require __DIR__ . '/routes/update_profile.php';
+        break;
+
     default:
         // Debug: Log the path that was not found
         error_log('DEBUG: Route not found: ' . $path);

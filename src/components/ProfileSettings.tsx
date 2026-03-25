@@ -65,16 +65,46 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
     setError(null);
     setSuccessMessage(null);
 
-    // Profile Update wird über PHP Backend gemacht
-    // Hier könnte eine API für Profil-Updates hinzugefügt werden
-    setSuccessMessage('Profil-Updates werden über das Backend verwaltet.');
-    
-    setTimeout(() => {
-      setSuccessMessage(null);
-    }, 3000);
+    try {
+      // Profil über PHP Backend aktualisieren
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL;
+      const token = localStorage.getItem('authToken');
+      
+      const res = await fetch(`${baseUrl}/api/update-profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim() || null,
+          color: color
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Fehler beim Speichern des Profils');
+      }
+      
+      setSuccessMessage('Profil erfolgreich gespeichert!');
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      
+      onUpdate();
+    } catch (err) {
+      console.error('Fehler beim Speichern des Profils:', err);
+      setError(err instanceof Error ? err.message : 'Fehler beim Speichern des Profils');
+      
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+    }
 
     setIsSaving(false);
-    onUpdate();
   };
 
   const handleChangePassword = async () => {

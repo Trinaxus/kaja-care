@@ -230,12 +230,28 @@
     }
   }
 
-  /* Mobile Calendar: Montag-Freitag sichtbar, Sa/So scrollbar */
+  /* Mobile Calendar: 4 Tage sichtbar, 3 Tage scrollbar */
   @media (max-width: 640px) {
-    .mobile-calendar-header,
-    .mobile-calendar-grid {
+    .mobile-calendar-scroll-container {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      width: 100%;
+    }
+    
+    /* 4 Tage sichtbar = volle Breite nutzen */
+    .mobile-calendar-header,
+    .mobile-calendar-grid {
+      width: 175vw; /* 7 Tage * 25vw */
+      min-width: 175vw;
+    }
+    
+    /* Scroll-Snap für Tages-Wechsel */
+    .mobile-calendar-header > div,
+    .mobile-calendar-grid > div {
+      scroll-snap-align: start;
+      width: 25vw; /* 100% / 4 Tage */
+      min-width: 25vw;
     }
     
     .mobile-calendar-header::-webkit-scrollbar,
@@ -258,6 +274,36 @@
     .mobile-calendar-header::-webkit-scrollbar-thumb:hover,
     .mobile-calendar-grid::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
+    }
+    
+    /* Dark mode scrollbar */
+    @media (prefers-color-scheme: dark) {
+      .mobile-calendar-header::-webkit-scrollbar-track,
+      .mobile-calendar-grid::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      
+      .mobile-calendar-header::-webkit-scrollbar-thumb,
+      .mobile-calendar-grid::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      
+      .mobile-calendar-header::-webkit-scrollbar-thumb:hover,
+      .mobile-calendar-grid::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+    }
+  }
+  
+  /* Desktop: Grid soll sich auf volle Breite strecken */
+  @media (min-width: 641px) {
+    .mobile-calendar-header,
+    .mobile-calendar-grid {
+      width: 100%;
+    }
+    
+    .mobile-calendar-scroll-container {
+      overflow-x: visible;
     }
   }
 }

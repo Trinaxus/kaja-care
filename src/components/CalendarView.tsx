@@ -1098,15 +1098,16 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       </div>
 
       <div className="surface rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-800/60 overflow-hidden">
-        <div className="grid grid-cols-7 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-950 border-b border-slate-200/50 dark:border-slate-800/60 mobile-calendar-header">
-          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
-            <div key={day} className="px-3 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {day}
-            </div>
-          ))}
-        </div>
+        <div className="mobile-calendar-scroll-container">
+          <div className="grid grid-cols-7 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-950 border-b border-slate-200/50 dark:border-slate-800/60 mobile-calendar-header">
+            {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
+              <div key={day} className="px-3 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mobile-calendar-day">
+                {day}
+              </div>
+            ))}
+          </div>
 
-        <div className="grid grid-cols-7 divide-x divide-y divide-slate-200/50 dark:divide-slate-800/60 mobile-calendar-grid">
+          <div className="grid grid-cols-7 divide-x divide-y divide-slate-200/50 dark:divide-slate-800/60 mobile-calendar-grid">
           {days.map((day) => {
             const caretaker = day.assignment ? getProfileById(day.assignment.caretaker_id) : null;
             const myPreference = day.preferences[currentProfile.id];
@@ -1171,7 +1172,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     });
                   }
                 }}
-                className={`min-h-32 p-2 sm:p-3 cursor-pointer transition-all duration-200 relative group ${getTileBackgroundClass()} ${
+                className={`min-h-32 p-2 sm:p-3 cursor-pointer transition-all duration-200 relative group mobile-calendar-day ${getTileBackgroundClass()} ${
                   isToday(day.date) && !isSelected ? 'ring-2 ring-inset ring-orange-400 dark:ring-orange-500' : ''
                 }`}
               >
@@ -1391,6 +1392,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
               </div>
             );
           })}
+          </div>
         </div>
       </div>
 
