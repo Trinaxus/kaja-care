@@ -17,6 +17,7 @@ import { X, Calendar, Stethoscope, GraduationCap, Pill, Star, Users, Plus, Trash
 import { deleteItems, listItems, upsertItems } from '../api/collections';
 import { profileColorClass } from '../lib/profileColor';
 import { resolveProfileById } from '../lib/knownProfiles';
+import { notificationHelpers } from '../services/notifications';
 
 interface DayDetailModalProps {
   date: string;
@@ -272,7 +273,22 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
         created_at: details.handover ? (details.handover as any).created_at : nowIso(),
         updated_at: nowIso(),
       };
-      await upsertItems('handovers', payload, ['date']);
+      const handoverResult = await upsertItems('handovers', payload, ['date']);
+      
+      // Benachrichtigungen an beteiligte Benutzer senden
+      if (handoverResult && handoverResult.length > 0) {
+        const handoverId = handoverResult[0].id;
+        
+        // An den Benutzer, der den Hund bringt
+        if (bringsUserId) {
+          await notificationHelpers.onHandoverUpdated(handoverId, bringsUserId);
+        }
+        
+        // An den Benutzer, der den Hund abholt
+        if (picksUpUserId && picksUpUserId !== bringsUserId) {
+          await notificationHelpers.onHandoverUpdated(handoverId, picksUpUserId);
+        }
+      }
     } catch (e: any) {
       console.error('Error saving handover:', e);
       alert('Fehler beim Speichern der Übergabe: ' + (e?.message || 'Unbekannter Fehler'));
@@ -495,12 +511,17 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
 
   const handleAssignCaretaker = async (caretakerId: string) => {
     try {
-      await upsertItems('care_assignments', {
+      const assignmentId = crypto.randomUUID();
+      const assignmentResult = await upsertItems('care_assignments', {
+        id: assignmentId,
         date,
         caretaker_id: caretakerId,
         created_by: currentProfile.id,
         status: 'planned'
       }, ['date']);
+      
+      // Benachrichtigung an den Betreuer senden
+      await notificationHelpers.onAssignmentCreated(assignmentId, caretakerId);
     } catch (e: any) {
       console.error('Error assigning caretaker:', e);
       alert('Fehler beim Zuweisen: ' + (e?.message || 'Unbekannter Fehler'));

@@ -37,6 +37,7 @@ if (!is_array($payload)) {
 $name = isset($payload['name']) ? trim((string) $payload['name']) : '';
 $email = isset($payload['email']) ? trim((string) $payload['email']) : '';
 $color = isset($payload['color']) ? trim((string) $payload['color']) : '';
+$preferences = isset($payload['preferences']) && is_array($payload['preferences']) ? $payload['preferences'] : null;
 
 if ($name === '') {
     json_response([
@@ -77,6 +78,11 @@ foreach ($store['users'] as $idx => $user) {
         $user['displayName'] = $name;
         $user['email'] = $email !== '' ? $email : $user['email'];
         $user['color'] = $color !== '' ? $color : $user['color'];
+        
+        // Update preferences if provided
+        if ($preferences !== null) {
+            $user['preferences'] = $preferences;
+        }
         
         $store['users'][$idx] = $user;
         $updated = $user;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Profile, Request } from '../lib/database.types';
 import { Calendar, Check, X, Plus, MessageSquare, Trash2, CreditCard as Edit2 } from 'lucide-react';
 import { deleteItems, listItems, upsertItems } from '../api/collections';
+import { notificationHelpers } from '../services/notifications';
 
 interface RequestsPanelProps {
   profiles: Profile[];
@@ -37,7 +38,7 @@ export function RequestsPanel({ profiles, currentProfile, onUpdate }: RequestsPa
     if (!otherProfile || !startDate || !endDate) return;
 
     const nowIso = new Date().toISOString();
-    await upsertItems('requests', {
+    const request = await upsertItems('requests', {
       id: crypto.randomUUID(),
       from_user_id: currentProfile.id,
       to_user_id: otherProfile.id,
@@ -48,6 +49,11 @@ export function RequestsPanel({ profiles, currentProfile, onUpdate }: RequestsPa
       created_at: nowIso,
       updated_at: nowIso
     }, ['id']);
+
+    // Benachrichtigung an den Empfänger senden
+    if (request && request.length > 0) {
+      await notificationHelpers.onRequestCreated(request[0].id, otherProfile.id);
+    }
 
     resetForm();
     await loadAllRequests();

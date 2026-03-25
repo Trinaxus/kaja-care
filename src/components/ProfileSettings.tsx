@@ -70,6 +70,20 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
       const baseUrl = import.meta.env.VITE_SERVER_BASE_URL;
       const token = localStorage.getItem('authToken');
       
+      // Benachrichtigungseinstellungen vorbereiten
+      const updatedPreferences = {
+        ...preferences,
+        notifications: {
+          email: notificationPrefs.email,
+          push: notificationPrefs.push,
+          requests: notificationPrefs.requests,
+          handovers: notificationPrefs.handovers,
+          assignments: notificationPrefs.assignments
+        },
+        language: preferences.language || 'de',
+        timezone: preferences.timezone || 'Europe/Berlin'
+      };
+      
       const res = await fetch(`${baseUrl}/api/update-profile`, {
         method: 'PATCH',
         headers: {
@@ -79,7 +93,8 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim() || null,
-          color: color
+          color: color,
+          preferences: updatedPreferences
         })
       });
 
