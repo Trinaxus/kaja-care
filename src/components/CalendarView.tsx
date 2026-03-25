@@ -15,7 +15,12 @@ import {
   UserX,
   Check,
   X,
-  Save
+  Save,
+  Download,
+  ChevronDown,
+  Calendar,
+  Filter,
+  User
 } from 'lucide-react';
 import { DayDetailModal } from './DayDetailModal';
 import { AbsenceModal } from './AbsenceModal';
@@ -102,11 +107,51 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 const downloadIcs = async (
   profiles: Profile[],
-  opts?: { from?: string; to?: string; filename?: string }
+  opts?: { from?: string; to?: string; filename?: string; profileFilter?: 'martin' | 'lisa' | 'reduced' }
 ) => {
   const inRange = (date: string) => {
     if (opts?.from && date < opts.from) return false;
     if (opts?.to && date > opts.to) return false;
+    return true;
+  };
+
+  const isRelevantForExport = (day: any, profileFilter?: 'martin' | 'lisa' | 'reduced') => {
+    if (!profileFilter) return true; // "Alle Export" zeigt alles
+    
+    if (profileFilter === 'reduced') {
+      // Reduzierter Export: Nur Tage mit Änderungen, Übergaben oder wichtigen Informationen
+      const hasAssignment = day.assignments?.length > 0;
+      const hasAbsences = day.absences?.length > 0;
+      const hasHandovers = day.handovers?.length > 0;
+      const hasNotes = day.notes?.length > 0;
+      
+      return hasAssignment || hasAbsences || hasHandovers || hasNotes;
+    }
+    
+    const martinProfile = profiles.find(p => p.name.toLowerCase().includes('martin'));
+    const lisaProfile = profiles.find(p => p.name.toLowerCase().includes('lisa'));
+    
+    if (!martinProfile || !lisaProfile) return true;
+    
+    const martinId = martinProfile.id;
+    const lisaId = lisaProfile.id;
+    
+    if (profileFilter === 'martin') {
+      // Martin Export: Nur Betreuer & Übergabe für Martin
+      const hasMartinAssignment = day.assignments?.some((a: any) => a.caretaker_id === martinId);
+      const hasHandover = day.handovers?.length > 0;
+      
+      return hasMartinAssignment || hasHandover;
+    }
+    
+    if (profileFilter === 'lisa') {
+      // Lisa Export: Nur Betreuer & Übergabe für Lisa
+      const hasLisaAssignment = day.assignments?.some((a: any) => a.caretaker_id === lisaId);
+      const hasHandover = day.handovers?.length > 0;
+      
+      return hasLisaAssignment || hasHandover;
+    }
+    
     return true;
   };
 
@@ -135,11 +180,23 @@ const downloadIcs = async (
     lines.push('PRODID:-//KajaCare//Calendar Export//DE');
     lines.push('CALSCALE:GREGORIAN');
     lines.push('METHOD:PUBLISH');
-    lines.push('X-WR-CALNAME:' + icsEscape('KajaCare'));
+    
+    // Kalender-Name je nach Export-Typ
+    let calendarName = 'KajaCare';
+    if (opts?.profileFilter === 'martin') {
+      calendarName = 'KajaCare Martin';
+    } else if (opts?.profileFilter === 'lisa') {
+      calendarName = 'KajaCare Lisa';
+    } else if (opts?.profileFilter === 'reduced') {
+      calendarName = 'KajaCare Reduziert';
+    }
+    
+    lines.push('X-WR-CALNAME:' + icsEscape(calendarName));
     lines.push('X-WR-TIMEZONE:Europe/Berlin');
 
-    const pushAllDay = (uid: string, date: string, summary: string, description?: string) => {
+    const pushAllDay = (uid: string, date: string, summary: string, description?: string, dayData?: any) => {
       if (!inRange(date)) return;
+      if (dayData && !isRelevantForExport(dayData, opts?.profileFilter)) return;
       lines.push('BEGIN:VEVENT');
       lines.push('UID:' + icsEscape(uid));
       lines.push('DTSTAMP:' + icsEscape(dtstamp));
@@ -150,8 +207,9 @@ const downloadIcs = async (
       lines.push('END:VEVENT');
     };
 
-    const pushTimed = (uid: string, date: string, time: string, minutes: number, summary: string, description?: string) => {
+    const pushTimed = (uid: string, date: string, time: string, minutes: number, summary: string, description?: string, dayData?: any) => {
       if (!inRange(date)) return;
+      if (dayData && !isRelevantForExport(dayData, opts?.profileFilter)) return;
       const start = toUtcIcs(date, time);
       const endDt = new Date(`${date}T${time}:00`);
       endDt.setMinutes(endDt.getMinutes() + minutes);
@@ -167,17 +225,93 @@ const downloadIcs = async (
       lines.push('END:VEVENT');
     };
 
+    // Alle Daten pro Tag sammeln für Filter-Logik
+    const dayDataMap = new Map<string, any>();
+    
+    // Initiale leere Tagesdaten
+    for (const it of assignments) {
+      const date = String(it?.date || '');
+      if (!date) continue;
+      if (!dayDataMap.has(date)) {
+        dayDataMap.set(date, {
+          date,
+          assignments: [],
+          absences: [],
+          handovers: [],
+          notes: []
+        });
+      }
+      dayDataMap.get(date).assignments.push(it);
+    }
+    
+    for (const it of availability) {
+      const date = String(it?.date || '');
+      if (!date) continue;
+      if (!dayDataMap.has(date)) {
+        dayDataMap.set(date, {
+          date,
+          assignments: [],
+          absences: [],
+          handovers: [],
+          notes: []
+        });
+      }
+      dayDataMap.get(date).absences.push(it);
+    }
+    
+    for (const it of handovers) {
+      const date = String(it?.date || '');
+      if (!date) continue;
+      if (!dayDataMap.has(date)) {
+        dayDataMap.set(date, {
+          date,
+          assignments: [],
+          absences: [],
+          handovers: [],
+          notes: []
+        });
+      }
+      dayDataMap.get(date).handovers.push(it);
+    }
+    
+    for (const it of notes) {
+      const date = String(it?.date || '');
+      if (!date) continue;
+      if (!dayDataMap.has(date)) {
+        dayDataMap.set(date, {
+          date,
+          assignments: [],
+          absences: [],
+          handovers: [],
+          notes: []
+        });
+      }
+      dayDataMap.get(date).notes.push(it);
+    }
+
     for (const it of assignments) {
       const date = String(it?.date || '');
       const caretakerId = String(it?.caretaker_id || '');
       if (!date || !caretakerId) continue;
+      
+      // Bei Martin/Lisa Export nur relevante Betreuungen anzeigen
+      if (opts?.profileFilter === 'martin') {
+        const martinProfile = profiles.find(p => p.name.toLowerCase().includes('martin'));
+        if (martinProfile && caretakerId !== martinProfile.id) continue; // Nur Martin-Betreuungen
+      } else if (opts?.profileFilter === 'lisa') {
+        const lisaProfile = profiles.find(p => p.name.toLowerCase().includes('lisa'));
+        if (lisaProfile && caretakerId !== lisaProfile.id) continue; // Nur Lisa-Betreuungen
+      }
+      
       const name = getProfileName(caretakerId);
       const color = getProfileColor(caretakerId);
+      const dayData = dayDataMap.get(date);
       pushAllDay(
         `${String(it?.id || `assign-${date}-${caretakerId}`)}@kajacare`,
         date,
         `Kaja bei ${name}`,
-        color ? `Person: ${name}\nFarbe: ${color}` : `Person: ${name}`
+        color ? `Person: ${name}\nFarbe: ${color}` : `Person: ${name}`,
+        dayData
       );
     }
 
@@ -190,7 +324,8 @@ const downloadIcs = async (
       const color = getProfileColor(userId);
       const s = status ? `Abwesenheit: ${name} (${status})` : `Abwesenheit: ${name}`;
       const desc = color ? `Person: ${name}\nFarbe: ${color}` : `Person: ${name}`;
-      pushAllDay(`${String(it?.id || `absence-${date}-${userId}`)}@kajacare`, date, s, desc);
+      const dayData = dayDataMap.get(date);
+      pushAllDay(`${String(it?.id || `absence-${date}-${userId}`)}@kajacare`, date, s, desc, dayData);
     }
 
     for (const it of handovers) {
@@ -203,17 +338,29 @@ const downloadIcs = async (
       const toName = toId ? getProfileName(toId) : '—';
       const fromColor = fromId ? getProfileColor(fromId) : '';
       const toColor = toId ? getProfileColor(toId) : '';
+      
+      // Bei Martin/Lisa Export nur relevante Übergaben anzeigen
+      if (opts?.profileFilter === 'martin') {
+        // Martin Export: Keine Übergaben anzeigen
+        continue;
+      } else if (opts?.profileFilter === 'lisa') {
+        const lisaProfile = profiles.find(p => p.name.toLowerCase().includes('lisa'));
+        if (lisaProfile && fromId !== lisaProfile.id && toId !== lisaProfile.id) continue; // Nur Übergaben mit Lisa
+      }
+      
       const descParts = [
         fromId ? `Von: ${fromName}${fromColor ? ` (Farbe: ${fromColor})` : ''}` : '',
         toId ? `Zu: ${toName}${toColor ? ` (Farbe: ${toColor})` : ''}` : ''
       ].filter(Boolean);
+      const dayData = dayDataMap.get(date);
       pushTimed(
         `${String(it?.id || `handover-${date}-${time}-${fromId}-${toId}`)}@kajacare`,
         date,
         time,
         30,
         `Übergabe: ${fromName} → ${toName}`,
-        descParts.length ? descParts.join('\n') : undefined
+        descParts.length ? descParts.join('\n') : undefined,
+        dayData
       );
     }
 
@@ -235,6 +382,12 @@ const downloadIcs = async (
       const visitorId = String(it?.visitor_id || '');
       const startTime = String(it?.start_time || '').slice(0, 5);
       if (!date || !visitorId || !startTime) continue;
+      
+      // Martin Export: Keine Kurzbesuche anzeigen
+      if (opts?.profileFilter === 'martin') {
+        continue;
+      }
+      
       const endTime = String(it?.end_time || '').slice(0, 5);
       const dur = Number(it?.duration_minutes || 0);
       const mins = endTime ? Math.max(1, Math.round((new Date(`${date}T${endTime}:00`).getTime() - new Date(`${date}T${startTime}:00`).getTime()) / 60000)) : (dur > 0 ? dur : 30);
@@ -264,6 +417,12 @@ const downloadIcs = async (
       const profileId = String(it?.profile_id || '');
       const level = String(it?.preference_level || '');
       if (!date || !profileId || !level) continue;
+      
+      // Martin Export: Keine Wünsche anzeigen
+      if (opts?.profileFilter === 'martin') {
+        continue;
+      }
+      
       const reason = String(it?.reason || '');
       const desc = reason ? `Grund: ${reason}` : undefined;
       const name = getProfileName(profileId);
@@ -306,6 +465,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [selectedCaretaker, setSelectedCaretaker] = useState<string | null>(null);
   const [showAbsenceModal, setShowAbsenceModal] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [originalAssignments, setOriginalAssignments] = useState<Map<string, CareAssignment>>(new Map());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -318,6 +478,18 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       setSelectedDate(initialDate);
     }
   }, [initialDate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showExportDropdown && !target.closest('.export-dropdown-container')) {
+        setShowExportDropdown(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showExportDropdown]);
 
   const undoRedo = useUndoRedo<Map<string, string | null>>(new Map());
   const dragDrop = useDragAndDrop();
@@ -345,40 +517,6 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
   useEffect(() => {
     loadMonthData();
   }, [currentMonth]);
-
-  // Mobile Calendar Scroll Detection
-  useEffect(() => {
-    const handleScroll = () => {
-      const header = document.querySelector('.mobile-calendar-header');
-      const grid = document.querySelector('.mobile-calendar-grid');
-      
-      if (header && grid) {
-        const scrollLeft = header.scrollLeft;
-        const showWeekend = scrollLeft > 100;
-        
-        if (showWeekend) {
-          header.classList.add('show-weekend');
-          grid.classList.add('show-weekend');
-        } else {
-          header.classList.remove('show-weekend');
-          grid.classList.remove('show-weekend');
-        }
-      }
-    };
-
-    const header = document.querySelector('.mobile-calendar-header');
-    const grid = document.querySelector('.mobile-calendar-grid');
-    
-    if (header && grid) {
-      header.addEventListener('scroll', handleScroll);
-      grid.addEventListener('scroll', handleScroll);
-      
-      return () => {
-        header.removeEventListener('scroll', handleScroll);
-        grid.removeEventListener('scroll', handleScroll);
-      };
-    }
-  }, [days]);
 
   useKeyboardShortcuts([
     {
@@ -727,14 +865,108 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
         </div>
 
         <div className="flex gap-2 sm:gap-3 flex-wrap">
-          <button
-            type="button"
-            onClick={() => downloadIcs(profiles, { filename: 'kajacare-calendar-all.ics' })}
-            className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
-            title="Export für Google/Apple Kalender (.ics)"
-          >
-            Export (alles .ics)
-          </button>
+          <div className="relative export-dropdown-container">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowExportDropdown(!showExportDropdown);
+              }}
+              className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+              title="Kalender exportieren"
+            >
+              <Download className="w-4 h-4" />
+              Export
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            
+            {showExportDropdown && (
+              <div className="absolute top-full left-0 mt-2 w-72 surface border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden backdrop-blur-md bg-white/95 dark:bg-slate-900/95">
+                <div className="p-3 border-b border-slate-200 dark:border-slate-700 backdrop-blur-sm bg-white/90 dark:bg-slate-800/90">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Export-Typ wählen:</p>
+                </div>
+                
+                <div className="p-2 backdrop-blur-sm bg-white/90 dark:bg-slate-800/90">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      downloadIcs(profiles, { filename: 'kajacare-calendar-all.ics' });
+                      setShowExportDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Calendar className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-sm text-slate-700 dark:text-slate-100">Alle Einträge</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kompletter Kalender mit allen Tagen, Abwesenheiten und Übergaben</div>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      downloadIcs(profiles, { 
+                        filename: 'kajacare-calendar-reduced.ics',
+                        profileFilter: 'reduced'
+                      });
+                      setShowExportDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Filter className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-sm text-slate-700 dark:text-slate-100">Reduzierter Export</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nur Tage mit Änderungen, Übergaben oder wichtigen Informationen</div>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      downloadIcs(profiles, { 
+                        filename: 'kajacare-calendar-martin.ics',
+                        profileFilter: 'martin'
+                      });
+                      setShowExportDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <User className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-sm text-slate-700 dark:text-slate-100">Martin Export</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Betreuer & Übergabe: Wann Martin den Hund hat und übergibt</div>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      downloadIcs(profiles, { 
+                        filename: 'kajacare-calendar-lisa.ics',
+                        profileFilter: 'lisa'
+                      });
+                      setShowExportDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <User className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-sm text-slate-700 dark:text-slate-100">Lisa Export</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Betreuer & Übergabe: Wann Lisa den Hund hat und übergibt</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           {mode === 'overview' && (
             <>
               {(undoRedo.canUndo || undoRedo.canRedo) && (
