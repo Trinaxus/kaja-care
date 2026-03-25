@@ -346,6 +346,40 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
     loadMonthData();
   }, [currentMonth]);
 
+  // Mobile Calendar Scroll Detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const header = document.querySelector('.mobile-calendar-header');
+      const grid = document.querySelector('.mobile-calendar-grid');
+      
+      if (header && grid) {
+        const scrollLeft = header.scrollLeft;
+        const showWeekend = scrollLeft > 100;
+        
+        if (showWeekend) {
+          header.classList.add('show-weekend');
+          grid.classList.add('show-weekend');
+        } else {
+          header.classList.remove('show-weekend');
+          grid.classList.remove('show-weekend');
+        }
+      }
+    };
+
+    const header = document.querySelector('.mobile-calendar-header');
+    const grid = document.querySelector('.mobile-calendar-grid');
+    
+    if (header && grid) {
+      header.addEventListener('scroll', handleScroll);
+      grid.addEventListener('scroll', handleScroll);
+      
+      return () => {
+        header.removeEventListener('scroll', handleScroll);
+        grid.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [days]);
+
   useKeyboardShortcuts([
     {
       key: 'ArrowLeft',
@@ -832,7 +866,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       </div>
 
       <div className="surface rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-800/60 overflow-hidden">
-        <div className="grid grid-cols-7 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-950 border-b border-slate-200/50 dark:border-slate-800/60">
+        <div className="grid grid-cols-7 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-950 border-b border-slate-200/50 dark:border-slate-800/60 mobile-calendar-header">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
             <div key={day} className="px-3 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               {day}
@@ -840,7 +874,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           ))}
         </div>
 
-        <div className="grid grid-cols-7 divide-x divide-y divide-slate-200/50 dark:divide-slate-800/60">
+        <div className="grid grid-cols-7 divide-x divide-y divide-slate-200/50 dark:divide-slate-800/60 mobile-calendar-grid">
           {days.map((day) => {
             const caretaker = day.assignment ? getProfileById(day.assignment.caretaker_id) : null;
             const myPreference = day.preferences[currentProfile.id];

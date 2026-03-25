@@ -229,4 +229,64 @@
       transform: translateX(-100%);
     }
   }
+
+  /* Mobile Calendar: Montag-Freitag sichtbar, Sa/So scrollbar */
+  @media (max-width: 640px) {
+    .mobile-calendar-header,
+    .mobile-calendar-grid {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      min-width: 700px;
+    }
+    
+    /* Standard: Sa/So ausblenden */
+    .mobile-calendar-header > div:nth-child(6),
+    .mobile-calendar-header > div:nth-child(7),
+    .mobile-calendar-grid > div:nth-child(7n-1),
+    .mobile-calendar-grid > div:nth-child(7n) {
+      opacity: 0.3;
+      transform: scale(0.95);
+      transition: all 0.3s ease;
+    }
+    
+    /* Sa/So normal anzeigen */
+    .mobile-calendar-header.show-weekend > div:nth-child(6),
+    .mobile-calendar-header.show-weekend > div:nth-child(7),
+    .mobile-calendar-grid.show-weekend > div:nth-child(7n-1),
+    .mobile-calendar-grid.show-weekend > div:nth-child(7n) {
+      opacity: 1;
+      transform: scale(1);
+    }
+    
+    /* Mo-Di ausblenden wenn Wochenende sichtbar */
+    .mobile-calendar-header.show-weekend > div:nth-child(1),
+    .mobile-calendar-header.show-weekend > div:nth-child(2),
+    .mobile-calendar-grid.show-weekend > div:nth-child(7n+1),
+    .mobile-calendar-grid.show-weekend > div:nth-child(7n+2) {
+      opacity: 0.3;
+      transform: scale(0.95);
+    }
+    
+    .mobile-calendar-header::-webkit-scrollbar,
+    .mobile-calendar-grid::-webkit-scrollbar {
+      height: 4px;
+    }
+    
+    .mobile-calendar-header::-webkit-scrollbar-track,
+    .mobile-calendar-grid::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 2px;
+    }
+    
+    .mobile-calendar-header::-webkit-scrollbar-thumb,
+    .mobile-calendar-grid::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
+    
+    .mobile-calendar-header::-webkit-scrollbar-thumb:hover,
+    .mobile-calendar-grid::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  }
 }
