@@ -664,7 +664,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
   const getPreferenceIcon = (level: PreferenceLevel) => {
     const config = PREFERENCE_CONFIG[level];
     const Icon = config.icon;
-    return <Icon className="w-3 h-3" />;
+    return <Icon className="w-3 h-3 sm:w-3 sm:h-3" />;
   };
 
   if (isLoading) {
@@ -905,7 +905,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     });
                   }
                 }}
-                className={`min-h-32 p-3 cursor-pointer transition-all duration-200 relative group ${getTileBackgroundClass()} ${
+                className={`min-h-32 p-2 sm:p-3 cursor-pointer transition-all duration-200 relative group ${getTileBackgroundClass()} ${
                   isToday(day.date) && !isSelected ? 'ring-2 ring-inset ring-orange-400 dark:ring-orange-500' : ''
                 }`}
               >
@@ -934,10 +934,10 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     {new Date(day.date).getDate()}
                   </span>
                   <div className="flex gap-1.5 flex-wrap justify-end relative z-10">
-                    {day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-600 dark:text-red-200" /></div>}
-                    {day.hasNotes && !day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
-                    {day.handover && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-600 dark:text-orange-200" /></div>}
-                    {day.events.length > 0 && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
+                    {day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-3 h-3 sm:w-3 sm:h-3 text-red-600 dark:text-red-200" /></div>}
+                    {day.hasNotes && !day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-3 h-3 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
+                    {day.handover && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-3 h-3 sm:w-3 sm:h-3 text-orange-600 dark:text-orange-200" /></div>}
+                    {day.events.length > 0 && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-3 h-3 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
                   </div>
                 </div>
 
@@ -974,7 +974,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     })()
                   ) : caretaker && (
                     <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0 cursor-help ${
+                      className={`w-4 h-4 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[9px] sm:text-xs font-bold shadow-sm flex-shrink-0 cursor-help ${
                         profileColorClass(caretaker, 'solid')
                       }`}
                       title={`Betreuer: ${caretaker.name}`}
@@ -984,16 +984,21 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                   )}
                   {day.handover && (
                     <div
-                      className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-full font-medium cursor-help max-w-full leading-none"
+                      className="flex items-center justify-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-full font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
                       title={`Übergabe um ${(day.handover.time || '12:00').substring(0, 5)}`}
                     >
-                      <span className="truncate">
+                      <span className="sm:whitespace-normal px-2 sm:px-0 inline-block">
                         {(() => {
                           const t = String(day.handover?.time || '12:00');
                           const hh = t.substring(0, 2);
                           const h = Number.parseInt(hh, 10);
-                          if (Number.isFinite(h)) return `${h} Uhr`;
-                          return (t || '12:00').substring(0, 5);
+                          const timeText = Number.isFinite(h) ? `${h} Uhr` : (t || '12:00').substring(0, 5);
+                          const isLongText = timeText.length > 6;
+                          return (
+                            <span className={isLongText ? 'animate-slide-fast' : ''}>
+                              {timeText}
+                            </span>
+                          );
                         })()}
                       </span>
                     </div>
@@ -1028,13 +1033,22 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                       return visitor ? (
                         <div
                           key={visit.id}
-                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-lg font-medium cursor-help max-w-full leading-none"
+                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
                           title={tooltipText}
                         >
-                          <span>{visitTypeLabels[visit.visit_type as keyof typeof visitTypeLabels]}</span>
-                          <span className="hidden sm:inline truncate">{visitor.name}</span>
-                          <span className="opacity-75 truncate">
-                            <span className="sm:hidden">{mobileTime}</span>
+                          <span className="px-2 sm:px-0 flex-shrink-0">{visitTypeLabels[visit.visit_type as keyof typeof visitTypeLabels]}</span>
+                          <span className="hidden sm:inline truncate px-2 sm:px-0 flex-1">{visitor.name}</span>
+                          <span className="opacity-75 truncate flex-1">
+                            <span className="sm:hidden px-2 sm:px-0 inline-block">
+                              {(() => {
+                                const isLongText = mobileTime.length > 6;
+                                return (
+                                  <span className={isLongText ? 'animate-slide-fast' : ''}>
+                                    {mobileTime}
+                                  </span>
+                                );
+                              })()}
+                            </span>
                             <span className="hidden sm:inline">{desktopTime}</span>
                           </span>
                         </div>
@@ -1057,14 +1071,24 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                       return absentProfile ? (
                         <div
                           key={absence.id}
-                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-lg font-medium cursor-help max-w-full leading-none"
+                          className="flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 bg-orange-100 text-orange-700 rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap"
                           title={tooltipText}
                         >
-                          <UserX className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                          <span className="hidden sm:inline truncate">{absentProfile.name}</span>
+                          <UserX className="w-3 h-3 sm:w-3 sm:h-3 flex-shrink-0" />
+                          <span className="hidden sm:inline truncate px-2 sm:px-0 flex-1">{absentProfile.name}</span>
                           {!absence.is_full_day && absence.start_time && absence.end_time && (
-                            <span className="opacity-75 truncate">
-                              <span className="sm:hidden">{formatTime(absence.start_time)}</span>
+                            <span className="opacity-75 truncate flex-1">
+                              <span className="sm:hidden px-2 sm:px-0 inline-block">
+                                {(() => {
+                                  const timeText = formatTime(absence.start_time);
+                                  const isLongText = timeText.length > 6;
+                                  return (
+                                    <span className={isLongText ? 'animate-slide-fast' : ''}>
+                                      {timeText}
+                                    </span>
+                                  );
+                                })()}
+                              </span>
                               <span className="hidden sm:inline">
                                 {formatTime(absence.start_time)}-{formatTime(absence.end_time)}
                               </span>
@@ -1079,11 +1103,10 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                 {mode !== 'assign' && (myPreference || otherPreference) && (
                   <div className="flex flex-col gap-1.5 mt-2 relative z-10">
                     {myPreference && (
-                      <div
-                        className="flex items-center gap-1.5 cursor-help"
+                      <div className="flex items-center gap-1.5 cursor-help"
                         title={`${currentProfile.name}: ${PREFERENCE_CONFIG[myPreference.preference_level].label}`}
                       >
-                        <div className={`inline-flex p-1.5 rounded-lg shadow-sm ${PREFERENCE_CONFIG[myPreference.preference_level].color}`}>
+                        <div className={`inline-flex p-1 sm:p-1.5 rounded-full shadow-sm ${PREFERENCE_CONFIG[myPreference.preference_level].color}`}>
                           {getPreferenceIcon(myPreference.preference_level)}
                         </div>
                         <span className="text-xs font-medium text-slate-600">{currentProfile.name}</span>
@@ -1094,7 +1117,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                         className="flex items-center gap-1.5 cursor-help"
                         title={`${otherProfile?.name}: ${PREFERENCE_CONFIG[otherPreference.preference_level].label}`}
                       >
-                        <div className={`inline-flex p-1.5 rounded-lg shadow-sm ${PREFERENCE_CONFIG[otherPreference.preference_level].color}`}>
+                        <div className={`inline-flex p-1 sm:p-1.5 rounded-full shadow-sm ${PREFERENCE_CONFIG[otherPreference.preference_level].color}`}>
                           {getPreferenceIcon(otherPreference.preference_level)}
                         </div>
                         <span className="text-xs font-medium text-slate-600">{otherProfile?.name}</span>
