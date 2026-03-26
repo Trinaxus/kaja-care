@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, CareDayEvent, Handover, Availability, ShortVisit } from '../lib/database.types';
+import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, CareDayEvent, Handover, Availability, ShortVisit, CareDayNote } from '../lib/database.types';
 import {
   ChevronLeft,
   ChevronRight,
@@ -47,12 +47,25 @@ interface DayData {
   preferences: Record<string, CareDayPreference>;
   events: CareDayEvent[];
   handover?: Handover;
+  notes: CareDayNote[];
   hasNotes: boolean;
   hasImportantNotes: boolean;
   absences: Availability[];
   hasConflict: boolean;
   shortVisits: ShortVisit[];
 }
+
+const MarqueeOrText = ({ text }: { text: string }) => {
+  const clean = String(text || '');
+  const isLongText = clean.length > 18;
+  return isLongText ? (
+    <div className="marquee">
+      <span>{clean}</span>
+    </div>
+  ) : (
+    <span>{clean}</span>
+  );
+};
 
 type ViewMode = 'overview' | 'preferences' | 'assign';
 
@@ -663,7 +676,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       listItems<CareDayPreference>('care_day_preferences', { date: dateRange }),
       listItems<CareDayEvent>('care_day_events', { date: dateRange }),
       listItems<Handover>('handovers', { date: dateRange }),
-      listItems<{ date: string; is_important: boolean }>('care_day_notes', { date: dateRange }),
+      listItems<CareDayNote>('care_day_notes', { date: dateRange }),
       listItems<Availability>('availability', { date: dateRange, type: 'unavailable' }),
       listItems<ShortVisit>('short_visits', { date: dateRange }),
     ]);
@@ -685,12 +698,10 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       eventsMap.get(e.date)!.push(e);
     });
 
-    const notesMap = new Map<string, { count: number; important: number }>();
+    const notesMap = new Map<string, CareDayNote[]>();
     (notes || []).forEach(n => {
-      if (!notesMap.has(n.date)) notesMap.set(n.date, { count: 0, important: 0 });
-      const stats = notesMap.get(n.date)!;
-      stats.count++;
-      if (n.is_important) stats.important++;
+      if (!notesMap.has(n.date)) notesMap.set(n.date, []);
+      notesMap.get(n.date)!.push(n);
     });
 
     const absencesMap = new Map<string, Availability[]>();
@@ -718,8 +729,9 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
         preferences: prefs,
         events: eventsMap.get(date) || [],
         handover: handoverMap.get(date),
-        hasNotes: (notesMap.get(date)?.count || 0) > 0,
-        hasImportantNotes: (notesMap.get(date)?.important || 0) > 0,
+        notes: notesMap.get(date) || [],
+        hasNotes: (notesMap.get(date) || []).length > 0,
+        hasImportantNotes: (notesMap.get(date) || []).some(n => n.is_important),
         absences,
         hasConflict,
         shortVisits: visitsMap.get(date) || []
@@ -1206,8 +1218,6 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     {new Date(day.date).getDate()}
                   </span>
                   <div className="flex gap-1.5 flex-wrap justify-end relative z-10">
-                    {day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help" title="Wichtige Notizen vorhanden"><AlertCircle className="w-3 h-3 sm:w-3 sm:h-3 text-red-600 dark:text-red-200" /></div>}
-                    {day.hasNotes && !day.hasImportantNotes && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title="Notizen vorhanden"><StickyNote className="w-3 h-3 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
                     {day.handover && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help" title={`Übergabe um ${day.handover.time || '12:00'}`}><ArrowLeftRight className="w-3 h-3 sm:w-3 sm:h-3 text-orange-600 dark:text-orange-200" /></div>}
                     {day.events.length > 0 && <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help" title={`${day.events.length} Termin(e)`}><Home className="w-3 h-3 sm:w-3 sm:h-3 text-blue-600 dark:text-blue-200" /></div>}
                   </div>
@@ -1278,6 +1288,35 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                     </div>
                   )}
                 </div>
+
+                {day.notes.length > 0 && (
+                  (() => {
+                    const important = day.notes.find(n => n.is_important);
+                    const note = important || day.notes[0];
+                    const icon = note.is_important
+                      ? <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      : <StickyNote className="w-3 h-3 flex-shrink-0" />;
+                    const bubbleClass = note.is_important
+                      ? 'bg-red-100 dark:bg-red-950/35 text-red-700 dark:text-red-200'
+                      : 'bg-yellow-100 dark:bg-yellow-950/35 text-yellow-800 dark:text-yellow-200';
+                    const prefix = note.is_important ? 'Auffälligkeit' : 'Notiz';
+                    const text = `${prefix}: ${String(note.content || '').trim()}`.trim();
+
+                    return (
+                      <div
+                        className={`flex items-center gap-1 text-[9px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 ${bubbleClass} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap mt-2 relative z-10`}
+                        title={text}
+                      >
+                        {icon}
+                        <span className="opacity-75 truncate flex-1">
+                          <span className="px-2 sm:px-0 inline-block">
+                            <MarqueeOrText text={text} />
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  })()
+                )}
 
                 {day.shortVisits.length > 0 && (
                   <div className="flex flex-col gap-1 mt-2 relative z-10">

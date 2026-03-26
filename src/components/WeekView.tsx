@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, CareDayEvent, Handover, Availability, ShortVisit } from '../lib/database.types';
+import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, CareDayEvent, Handover, Availability, ShortVisit, CareDayNote } from '../lib/database.types';
 import {
   ChevronLeft,
   ChevronRight,
@@ -33,6 +33,7 @@ interface DayData {
   preferences: Record<string, CareDayPreference>;
   events: CareDayEvent[];
   handover?: Handover;
+  notes: CareDayNote[];
   hasNotes: boolean;
   hasImportantNotes: boolean;
   absences: Availability[];
@@ -82,7 +83,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
       listItems<CareDayPreference>('care_day_preferences', { date: dateRange }),
       listItems<CareDayEvent>('care_day_events', { date: dateRange }),
       listItems<Handover>('handovers', { date: dateRange }),
-      listItems<{ date: string; is_important: boolean }>('care_day_notes', { date: dateRange }),
+      listItems<CareDayNote>('care_day_notes', { date: dateRange }),
       listItems<Availability>('availability', { date: dateRange, type: 'unavailable' }),
       listItems<ShortVisit>('short_visits', { date: dateRange }),
     ]);
@@ -92,6 +93,8 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
       const dayPrefs = preferences.filter(p => p.date === date);
       const prefsMap: Record<string, CareDayPreference> = {};
       dayPrefs.forEach(p => (prefsMap[(p as any).profile_id] = p));
+
+      const dayNotes = (notes || []).filter(n => n.date === date);
 
       const dayAbsences = (absences || []).filter(a => (a as any).date === date);
 
@@ -103,8 +106,9 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
         preferences: prefsMap,
         events: (events || []).filter(e => e.date === date),
         handover: (handovers || []).find(h => h.date === date),
-        hasNotes: (notes || []).some(n => n.date === date),
-        hasImportantNotes: (notes || []).some(n => n.date === date && (n as any).is_important),
+        notes: dayNotes,
+        hasNotes: dayNotes.length > 0,
+        hasImportantNotes: dayNotes.some(n => n.is_important),
         absences: dayAbsences,
         shortVisits: (visits || []).filter(v => (v as any).date === date),
         hasConflict
@@ -163,15 +167,15 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
     <div className="space-y-6">
       <div className="sm:static sticky top-0 z-20 -mx-4 px-4 py-3 sm:py-0 bg-white/85 dark:bg-slate-950/85 backdrop-blur border-b border-slate-200/70 dark:border-slate-800/70 sm:border-b-0">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="relative flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
             <button
               onClick={previousWeek}
-              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
+              className="absolute left-0 sm:static w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
             >
               <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
             </button>
 
-            <div className="flex-1 min-w-0 flex items-center justify-center sm:justify-start gap-2">
+            <div className="min-w-0 flex items-center justify-center sm:justify-start gap-2 px-12 sm:px-0">
               <Calendar className="w-5 h-5 text-slate-600 dark:text-slate-300 flex-shrink-0" />
               <h2 className="text-base sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
                 {formatWeekRange()}
@@ -180,7 +184,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
 
             <button
               onClick={nextWeek}
-              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
+              className="absolute right-0 sm:static w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
             >
               <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
             </button>
@@ -256,22 +260,6 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
                   </div>
 
                   <div className="flex gap-1.5 flex-wrap justify-end">
-                    {day.hasImportantNotes && (
-                      <div
-                        className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help"
-                        title="Wichtige Notizen vorhanden"
-                      >
-                        <AlertCircle className="w-3 h-3 text-red-600 dark:text-red-200" />
-                      </div>
-                    )}
-                    {day.hasNotes && !day.hasImportantNotes && (
-                      <div
-                        className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help"
-                        title="Notizen vorhanden"
-                      >
-                        <StickyNote className="w-3 h-3 text-blue-600 dark:text-blue-200" />
-                      </div>
-                    )}
                     {day.handover && (
                       <div
                         className="w-4 h-4 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help"
@@ -387,6 +375,33 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
                     </div>
                   )}
                 </div>
+              )}
+
+              {day.notes.length > 0 && (
+                (() => {
+                  const important = day.notes.find(n => n.is_important);
+                  const note = important || day.notes[0];
+                  const icon = note.is_important ? <AlertCircle className="w-3 h-3 flex-shrink-0" /> : <StickyNote className="w-3 h-3 flex-shrink-0" />;
+                  const bubbleClass = note.is_important
+                    ? 'bg-red-100 dark:bg-red-950/35 text-red-700 dark:text-red-200'
+                    : 'bg-yellow-100 dark:bg-yellow-950/35 text-yellow-800 dark:text-yellow-200';
+                  const prefix = note.is_important ? 'Auffälligkeit' : 'Notiz';
+                  const text = `${prefix}: ${String(note.content || '').trim()}`.trim();
+
+                  return (
+                    <div
+                      className={`flex items-center gap-1 text-xs px-2 py-1 ${bubbleClass} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap mb-2`}
+                      title={text}
+                    >
+                      {icon}
+                      <span className="opacity-90 truncate flex-1">
+                        <span className="px-2 sm:px-0 inline-block">
+                          <MarqueeOrText text={text} />
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })()
               )}
 
               {day.absences.length > 0 && (
@@ -507,13 +522,6 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
                   </div>
                 )}
 
-                {day.hasNotes && !day.hasImportantNotes && (
-                  <div className="absolute bottom-2 right-2">
-                    <div className="p-1 rounded-lg bg-yellow-100 dark:bg-yellow-950/35">
-                      <StickyNote className="w-3 h-3 text-yellow-600 dark:text-yellow-200" />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           );
