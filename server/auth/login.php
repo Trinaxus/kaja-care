@@ -36,7 +36,9 @@ if ($email === '' || $password === '') {
 }
 
 // DB-frei: User nur aus JSON-Store laden
+error_log('DEBUG: Looking for user with email: ' . $email);
 $foundUser = find_user_by_email($email);
+error_log('DEBUG: Found user: ' . ($foundUser ? json_encode($foundUser['email'] ?? 'unknown') : 'null'));
 
 // E-Mail oder Passwort falsch
 if (!$foundUser || !isset($foundUser['password_hash']) || !password_verify($password, (string) $foundUser['password_hash'])) {

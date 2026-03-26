@@ -48,17 +48,29 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
 
   // Update notification prefs when profile changes
   useEffect(() => {
+    console.log('Profile changed, updating notificationPrefs');
+    console.log('Current profile.preferences:', profile.preferences);
+    
     const updatedPreferences = typeof profile.preferences === 'object' && profile.preferences !== null
       ? profile.preferences as any
       : { notifications: { email: true, push: true, requests: true, handovers: true, assignments: true }, language: 'de', timezone: 'Europe/Berlin' };
     
-    setNotificationPrefs({
+    console.log('updatedPreferences:', updatedPreferences);
+    console.log('updatedPreferences.notifications:', updatedPreferences.notifications);
+    
+    const newNotificationPrefs = {
       email: updatedPreferences.notifications?.email ?? true,
       push: updatedPreferences.notifications?.push ?? true,
       requests: updatedPreferences.notifications?.requests ?? true,
       handovers: updatedPreferences.notifications?.handovers ?? true,
       assignments: updatedPreferences.notifications?.assignments ?? true
-    });
+    };
+    
+    console.log('Setting newNotificationPrefs:', newNotificationPrefs);
+    setNotificationPrefs(newNotificationPrefs);
+    
+    // Test: Check if profile has any data
+    console.log('Full profile object:', profile);
   }, [profile.preferences]);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -66,6 +78,9 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSaveProfile = async () => {
+    console.log('handleSaveProfile called');
+    console.log('notificationPrefs:', notificationPrefs);
+    
     if (!name.trim()) {
       setError('Bitte gib einen Namen ein');
       return;
@@ -85,6 +100,8 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
       const baseUrl = import.meta.env.VITE_SERVER_BASE_URL;
       const token = localStorage.getItem('authToken');
       
+      console.log('Sending to API:', baseUrl);
+      
       // Benachrichtigungseinstellungen vorbereiten
       const updatedPreferences = {
         ...preferences,
@@ -99,21 +116,27 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
         timezone: preferences.timezone || 'Europe/Berlin'
       };
       
+      const payload = {
+        name: name.trim(),
+        email: email.trim() || null,
+        color: color,
+        preferences: updatedPreferences
+      };
+      
+      console.log('API Payload:', payload);
+      
       const res = await fetch(`${baseUrl}/api/update-profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim() || null,
-          color: color,
-          preferences: updatedPreferences
-        })
+        body: JSON.stringify(payload)
       });
 
+      console.log('API Response status:', res.status);
       const json = await res.json();
+      console.log('API Response:', json);
       if (!res.ok || !json?.success) {
         throw new Error(json?.message || 'Fehler beim Speichern des Profils');
       }
@@ -199,34 +222,105 @@ export function ProfileSettings({ profile, onClose, onUpdate }: ProfileSettingsP
   };
 
   const handleSavePreferences = async () => {
+    console.log('=== handleSavePreferences START ===');
+    console.log('notificationPrefs:', notificationPrefs);
+    
     setIsSaving(true);
     setError(null);
     setSuccessMessage(null);
 
-    const updatedPreferences = {
-      ...preferences,
-      notifications: notificationPrefs,
-    };
+    try {
+      // Benachrichtigungseinstellungen über PHP Backend speichern
+      const baseUrl = import.meta.env.VITE_SERVER_BASE_URL;
+      const token = localStorage.getItem('authToken');
+      
+      console.log('Sending preferences to API:', baseUrl);
+      
+      const updatedPreferences = {
+        ...preferences,
+        notifications: {
+          email: notificationPrefs.email,
+          push: notificationPrefs.push,
+          requests: notificationPrefs.requests,
+          handovers: notificationPrefs.handovers,
+          assignments: notificationPrefs.assignments
+        },
+        language: preferences.language || 'de',
+        timezone: preferences.timezone || 'Europe/Berlin'
+      };
+      
+      const payload = {
+        name: profile.name,
+        email: profile.email || null,
+        color: profile.color || 'blue',
+        preferences: updatedPreferences
+      };
+      
+      console.log('Preferences API Payload:', payload);
+      
+      const res = await fetch(`${baseUrl}/api/update-profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
 
-    // Preferences Update wird über PHP Backend gemacht
-    // Hier könnte eine API für Preferences-Updates hinzugefügt werden
-    setSuccessMessage('Präferenzen werden über das Backend verwaltet.');
-    
-    setTimeout(() => {
-      setSuccessMessage(null);
-    }, 3000);
+      console.log('Preferences API Response status:', res.status);
+      const json = await res.json();
+      console.log('Preferences API Response:', json);
+      console.log('Preferences API Response user:', json.user);
+      console.log('Preferences API Response user.preferences:', json.user?.preferences);
+      
+      alert('API Response: ' + JSON.stringify(json.user?.preferences || 'null'));
+      
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || 'Fehler beim Speichern der Präferenzen');
+      }
+      
+      setSuccessMessage('Präferenzen erfolgreich gespeichert!');
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+
+      // Trigger profile update to refresh the UI
+      onUpdate();
+    } catch (err) {
+      console.error('Fehler beim Speichern der Präferenzen:', err);
+      setError(err instanceof Error ? err.message : 'Fehler beim Speichern der Präferenzen');
+      
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+    }
 
     setIsSaving(false);
-    onUpdate();
   };
 
-  const handleSave = () => {
+const handleSave = () => {
+    alert('handleSave called! activeTab: ' + activeTab);
+    console.log('handleSave called, activeTab:', activeTab);
+    console.log('isSaving:', isSaving);
+    
     if (activeTab === 'profile') {
+      console.log('Calling handleSaveProfile');
       handleSaveProfile();
     } else if (activeTab === 'password') {
       handleChangePassword();
     } else if (activeTab === 'preferences') {
-      handleSavePreferences();
+      alert('About to call handleSavePreferences');
+      console.log('Calling handleSavePreferences');
+      try {
+        handleSavePreferences();
+        alert('handleSavePreferences called successfully');
+      } catch (error) {
+        alert('Error in handleSavePreferences: ' + (error as Error).message);
+        console.error('Error in handleSavePreferences:', error);
+      }
+    } else {
+      console.log('Unknown tab:', activeTab);
     }
   };
 

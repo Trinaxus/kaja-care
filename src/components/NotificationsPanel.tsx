@@ -14,7 +14,10 @@ import {
   User,
   Trash2,
   Inbox,
-  MailOpen
+  MailOpen,
+  Search,
+  Archive,
+  ArrowUpDown
 } from 'lucide-react';
 
 interface ActivityLog {
@@ -56,6 +59,12 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [loadError, setLoadError] = useState<string>('');
 
+  const [messageView, setMessageView] = useState<'inbox' | 'sent' | 'archived'>('inbox');
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [archivedIds, setArchivedIds] = useState<Set<string>>(new Set());
+
   const [composeForm, setComposeForm] = useState({
     to_profile_id: '',
     subject: '',
@@ -65,6 +74,21 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
   useEffect(() => {
     loadMessages();
     loadActivityLog();
+  }, [currentProfile]);
+
+  useEffect(() => {
+    const key = `archivedMessages:${String(currentProfile.id || '')}`;
+    try {
+      const raw = localStorage.getItem(key) || '[]';
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setArchivedIds(new Set(parsed.map((v) => String(v))));
+      } else {
+        setArchivedIds(new Set());
+      }
+    } catch {
+      setArchivedIds(new Set());
+    }
   }, [currentProfile]);
 
   useEffect(() => {
@@ -107,6 +131,31 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
       setLoadError(msg);
       setMessages([]);
     }
+  };
+
+  const persistArchivedIds = (next: Set<string>) => {
+    const key = `archivedMessages:${String(currentProfile.id || '')}`;
+    setArchivedIds(next);
+    try {
+      localStorage.setItem(key, JSON.stringify(Array.from(next)));
+    } catch {
+      return;
+    }
+  };
+
+  const archiveMessage = (messageId: string) => {
+    const next = new Set(archivedIds);
+    next.add(messageId);
+    persistArchivedIds(next);
+    if (selectedMessage?.id === messageId) {
+      setSelectedMessage(null);
+    }
+  };
+
+  const unarchiveMessage = (messageId: string) => {
+    const next = new Set(archivedIds);
+    next.delete(messageId);
+    persistArchivedIds(next);
   };
 
   const loadActivityLog = async () => {
@@ -196,11 +245,47 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
   const otherProfile = profiles.find(p => p.id !== currentProfile.id);
 
   const unreadCount = messages.filter(
-    m => m.to_profile_id === currentProfile.id && !m.is_read
+    (m) => m.to_profile_id === currentProfile.id && !m.is_read && !archivedIds.has(m.id)
   ).length;
 
-  const inbox = messages.filter(m => m.to_profile_id === currentProfile.id);
-  const sent = messages.filter(m => m.from_profile_id === currentProfile.id);
+  const inbox = messages.filter((m) => m.to_profile_id === currentProfile.id);
+  const sent = messages.filter((m) => m.from_profile_id === currentProfile.id);
+
+  const applyMessageFilters = (list: Message[]) => {
+    const q = searchQuery.trim().toLowerCase();
+    let next = [...list];
+
+    if (messageView === 'archived') {
+      next = next.filter((m) => archivedIds.has(m.id));
+    } else {
+      next = next.filter((m) => !archivedIds.has(m.id));
+    }
+
+    if (showUnreadOnly) {
+      next = next.filter((m) => m.to_profile_id === currentProfile.id && !m.is_read);
+    }
+
+    if (q) {
+      next = next.filter((m) => {
+        const from = (getProfileById(m.from_profile_id)?.name || '').toLowerCase();
+        const to = (getProfileById(m.to_profile_id)?.name || '').toLowerCase();
+        const subject = String(m.subject || '').toLowerCase();
+        const content = String(m.content || '').toLowerCase();
+        return from.includes(q) || to.includes(q) || subject.includes(q) || content.includes(q);
+      });
+    }
+
+    next.sort((a, b) => {
+      const aa = String(a.created_at || '');
+      const bb = String(b.created_at || '');
+      return sortOrder === 'newest' ? bb.localeCompare(aa) : aa.localeCompare(bb);
+    });
+
+    return next;
+  };
+
+  const filteredInbox = applyMessageFilters(inbox);
+  const filteredSent = applyMessageFilters(sent);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -276,6 +361,76 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
       {activeTab === 'messages' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-4">
+            <div className="surface rounded-xl p-3 border border-slate-200 dark:border-slate-800/60">
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div className="flex items-center gap-2 surface-muted rounded-lg px-3 py-2 border border-slate-200/60 dark:border-slate-800/60 flex-1">
+                  <Search className="w-4 h-4 text-slate-500 dark:text-slate-300 flex-shrink-0" />
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-transparent outline-none text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                    placeholder="Suchen (Name, Betreff, Inhalt)"
+                  />
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => setMessageView('inbox')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition border ${
+                      messageView === 'inbox'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'surface border-slate-200 dark:border-slate-800/60 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900/60'
+                    }`}
+                  >
+                    Posteingang
+                  </button>
+                  <button
+                    onClick={() => setMessageView('sent')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition border ${
+                      messageView === 'sent'
+                        ? 'bg-slate-700 text-white border-slate-700'
+                        : 'surface border-slate-200 dark:border-slate-800/60 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900/60'
+                    }`}
+                  >
+                    Gesendet
+                  </button>
+                  <button
+                    onClick={() => setMessageView('archived')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition border ${
+                      messageView === 'archived'
+                        ? 'bg-amber-500 text-white border-amber-500'
+                        : 'surface border-slate-200 dark:border-slate-800/60 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900/60'
+                    }`}
+                  >
+                    Archiv
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                <button
+                  onClick={() => setShowUnreadOnly((v) => !v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                    showUnreadOnly
+                      ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-900/60 text-blue-700 dark:text-blue-200'
+                      : 'surface border-slate-200 dark:border-slate-800/60 text-slate-600 dark:text-slate-200'
+                  }`}
+                  title="Nur ungelesene Nachrichten anzeigen"
+                >
+                  {showUnreadOnly ? 'Nur ungelesen: AN' : 'Nur ungelesen: AUS'}
+                </button>
+
+                <button
+                  onClick={() => setSortOrder((v) => (v === 'newest' ? 'oldest' : 'newest'))}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition border surface border-slate-200 dark:border-slate-800/60 text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/60 flex items-center gap-1.5"
+                  title="Sortierung umschalten"
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                  {sortOrder === 'newest' ? 'Neueste zuerst' : 'Älteste zuerst'}
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center gap-2.5">
               <Inbox className="w-5 h-5 text-slate-700 dark:text-slate-200" />
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Posteingang</h3>
@@ -285,14 +440,14 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
                 </span>
               )}
             </div>
-            {inbox.length === 0 ? (
+            {messageView !== 'inbox' ? null : filteredInbox.length === 0 ? (
               <div className="surface-muted rounded-xl p-12 text-center border-2 border-dashed">
                 <Inbox className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                 <p className="text-slate-500 dark:text-slate-300 font-medium">Keine Nachrichten</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {inbox.map(message => {
+                {filteredInbox.map(message => {
                   const sender = getProfileById(message.from_profile_id);
                   return (
                     <div
@@ -340,10 +495,25 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
                           )}
                         </button>
                       </div>
-                      <p className={`text-sm mb-1.5 ${
-                        message.is_read ? 'font-medium text-slate-800 dark:text-slate-100' : 'font-bold text-slate-900 dark:text-slate-100'
-                      }`}>{message.subject}</p>
-                      <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className={`text-sm mb-1.5 ${
+                            message.is_read ? 'font-medium text-slate-800 dark:text-slate-100' : 'font-bold text-slate-900 dark:text-slate-100'
+                          }`}>{message.subject}</p>
+                          <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            archiveMessage(message.id);
+                          }}
+                          className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                          title="Archivieren"
+                        >
+                          <Archive className="w-4 h-4" />
+                        </button>
+                      </div>
                       <p className="text-slate-400 dark:text-slate-400 text-xs mt-2.5 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(message.created_at).toLocaleDateString('de-DE', {
@@ -364,14 +534,14 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
               <Send className="w-5 h-5 text-slate-700 dark:text-slate-200" />
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Gesendet</h3>
             </div>
-            {sent.length === 0 ? (
+            {messageView !== 'sent' ? null : filteredSent.length === 0 ? (
               <div className="surface-muted rounded-xl p-12 text-center border-2 border-dashed">
                 <Send className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                 <p className="text-slate-500 dark:text-slate-300 font-medium">Keine gesendeten Nachrichten</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {sent.map(message => {
+                {filteredSent.map(message => {
                   const recipient = getProfileById(message.to_profile_id);
                   return (
                     <div
@@ -388,6 +558,16 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
                           ></div>
                           <span className="font-bold text-slate-900 dark:text-slate-100">An: {recipient?.name}</span>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            archiveMessage(message.id);
+                          }}
+                          className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+                          title="Archivieren"
+                        >
+                          <Archive className="w-4 h-4" />
+                        </button>
                       </div>
                       <p className="font-medium text-slate-800 dark:text-slate-100 text-sm mb-1.5">{message.subject}</p>
                       <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
@@ -404,6 +584,60 @@ export function NotificationsPanel({ profiles, currentProfile, onUpdate, compose
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {messageView === 'archived' && (
+              <div className="mt-8">
+                <div className="flex items-center gap-2.5">
+                  <Archive className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Archiv</h3>
+                </div>
+                {applyMessageFilters(messages).length === 0 ? (
+                  <div className="surface-muted rounded-xl p-12 text-center border-2 border-dashed mt-3">
+                    <Archive className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-500 dark:text-slate-300 font-medium">Archiv ist leer</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 mt-3">
+                    {applyMessageFilters(messages).map((message) => {
+                      const sender = getProfileById(message.from_profile_id);
+                      const recipient = getProfileById(message.to_profile_id);
+                      const counterpart = message.from_profile_id === currentProfile.id ? recipient : sender;
+                      return (
+                        <div
+                          key={message.id}
+                          onClick={() => {
+                            setSelectedMessage(message);
+                            markAsRead(message);
+                          }}
+                          className="p-4 surface rounded-xl border border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 cursor-pointer transition-all hover:shadow-sm"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full shadow-sm ${
+                                counterpart?.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
+                              }`}></div>
+                              <span className="font-bold text-slate-900 dark:text-slate-100">{counterpart?.name}</span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                unarchiveMessage(message.id);
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-950/45 transition"
+                              title="Aus Archiv entfernen"
+                            >
+                              Wiederherstellen
+                            </button>
+                          </div>
+                          <p className="font-medium text-slate-800 dark:text-slate-100 text-sm mb-1.5">{message.subject}</p>
+                          <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 leading-relaxed">{message.content}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

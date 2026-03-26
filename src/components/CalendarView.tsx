@@ -601,7 +601,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       }
     }
 
-    loadMonthData();
+    // Nur Dashboard aktualisieren, nicht den Monat zurücksetzen
     onUpdate();
   };
 
@@ -624,7 +624,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
       }
     }
 
-    loadMonthData();
+    // Nur Dashboard aktualisieren, nicht den Monat zurücksetzen
     onUpdate();
   };
 
@@ -775,7 +775,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
 
     setSelectedDays(new Set());
     setMode('overview');
-    loadMonthData();
+    // Nur Dashboard aktualisieren, nicht den Monat zurücksetzen
     onUpdate();
   };
 
@@ -810,7 +810,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
     setSelectedCaretaker(null);
     setMode('overview');
     setHasUnsavedChanges(false);
-    loadMonthData();
+    // Nur Dashboard aktualisieren, nicht den Monat zurücksetzen
     onUpdate();
   };
 
@@ -850,6 +850,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           <button
             onClick={previousMonth}
             className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 active:scale-95 flex-shrink-0"
+            title="Vorheriger Monat"
           >
             <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
           </button>
@@ -859,6 +860,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           <button
             onClick={nextMonth}
             className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 active:scale-95 flex-shrink-0"
+            title="Nächster Monat"
           >
             <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
           </button>
@@ -872,7 +874,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                 e.stopPropagation();
                 setShowExportDropdown(!showExportDropdown);
               }}
-              className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 surface text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
               title="Kalender exportieren"
             >
               <Download className="w-4 h-4" />
@@ -970,7 +972,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           {mode === 'overview' && (
             <>
               {(undoRedo.canUndo || undoRedo.canRedo) && (
-                <div className="flex gap-1 surface rounded-xl border border-slate-200 dark:border-slate-700 p-1">
+                <div className="flex gap-1 surface rounded-xl p-1">
                   <button
                     onClick={handleUndo}
                     disabled={!undoRedo.canUndo}
@@ -992,21 +994,24 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
 
               <button
                 onClick={() => setMode('preferences')}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                title="Wünsche bearbeiten"
               >
                 <Heart className="w-4 h-4" />
                 <span className="hidden sm:inline">Wünsche</span>
               </button>
               <button
                 onClick={() => setMode('assign')}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                title="Betreuer zuweisen"
               >
                 <Check className="w-4 h-4" />
                 <span className="hidden sm:inline">Zuweisen</span>
               </button>
               <button
                 onClick={() => setShowAbsenceModal(true)}
-                className="px-3 sm:px-5 py-2 sm:py-2.5 surface border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 surface text-slate-700 dark:text-slate-100 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 flex items-center gap-1 sm:gap-2 shadow-sm active:scale-95 font-medium text-sm sm:text-base"
+                title="Abwesenheit eintragen"
               >
                 <UserX className="w-4 h-4" />
                 <span className="hidden sm:inline">Abwesenheit</span>
@@ -1166,7 +1171,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
                           status: 'planned'
                         }, ['date']);
 
-                        loadMonthData();
+                        // Nur Dashboard aktualisieren, nicht den Monat zurücksetzen
                         onUpdate();
                       }
                     });
@@ -1402,12 +1407,12 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           profiles={profiles}
           currentProfile={currentProfile}
           onUpdate={() => {
+            // Änderungen aus dem Modal direkt in der Monatsansicht spiegeln
             loadMonthData();
             onUpdate();
           }}
           onClose={() => {
             setSelectedDate(null);
-            loadMonthData();
             onUpdate();
           }}
         />
@@ -1418,6 +1423,7 @@ export function CalendarView({ profiles, currentProfile, onUpdate, onMonthChange
           profiles={profiles}
           onClose={() => setShowAbsenceModal(false)}
           onUpdate={() => {
+            // Abwesenheiten sofort im Grid aktualisieren
             loadMonthData();
             onUpdate();
           }}

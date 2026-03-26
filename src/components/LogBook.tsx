@@ -32,6 +32,14 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
   const toast = useToast();
 
   useEffect(() => {
+    if (!currentProfile?.id) return;
+
+    const key = `logbookLastSeenAt:${String(currentProfile.id)}`;
+    localStorage.setItem(key, new Date().toISOString());
+    window.dispatchEvent(new CustomEvent('logbook-read'));
+  }, [currentProfile?.id]);
+
+  useEffect(() => {
     loadLogEntries();
   }, [filter]);
 
@@ -89,6 +97,27 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
   };
 
   const getProfile = (id: string) => profiles.find(p => p.id === id);
+
+  const getDotClass = (color?: string) => {
+    switch (color) {
+      case 'blue':
+        return 'bg-blue-500';
+      case 'green':
+        return 'bg-green-500';
+      case 'red':
+        return 'bg-red-500';
+      case 'orange':
+        return 'bg-orange-500';
+      case 'purple':
+        return 'bg-purple-500';
+      case 'pink':
+        return 'bg-pink-500';
+      case 'yellow':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-slate-400';
+    }
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('de-DE', {
@@ -307,11 +336,11 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                              (entry.data as CareDayNote).note_type === 'behavior' ? 'Verhalten' :
                              (entry.data as CareDayNote).note_type}
                           </span>
-                          <div className={`w-2 h-2 rounded-full ${
-                            getProfile((entry.data as CareDayNote).caretaker_id)?.color === 'blue'
-                              ? 'bg-blue-500'
-                              : 'bg-green-500'
-                          }`}></div>
+                          <div
+                            className={`w-2 h-2 rounded-full ${getDotClass(
+                              getProfile((entry.data as CareDayNote).caretaker_id)?.color
+                            )}`}
+                          ></div>
                           <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
                             {getProfile((entry.data as CareDayNote).caretaker_id)?.name}
                           </span>
@@ -348,11 +377,11 @@ export function LogBook({ profiles, currentProfile }: LogBookProps) {
                              (entry.data as CareDayEvent).event_type === 'special' ? 'Pflege' :
                              (entry.data as CareDayEvent).event_type}
                           </span>
-                          <div className={`w-2 h-2 rounded-full ${
-                            getProfile((entry.data as CareDayEvent).created_by)?.color === 'blue'
-                              ? 'bg-blue-500'
-                              : 'bg-green-500'
-                          }`}></div>
+                          <div
+                            className={`w-2 h-2 rounded-full ${getDotClass(
+                              getProfile((entry.data as CareDayEvent).created_by)?.color
+                            )}`}
+                          ></div>
                           <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
                             {getProfile((entry.data as CareDayEvent).created_by)?.name}
                           </span>

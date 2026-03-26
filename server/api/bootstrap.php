@@ -158,17 +158,21 @@ function find_user_by_id(string $id): ?array
 function find_user_by_email(string $email): ?array
 {
     $store = get_users_store();
+    error_log('DEBUG: Users store contains ' . count($store['users'] ?? []) . ' users');
     foreach ($store['users'] as $user) {
         if (!is_array($user) || !isset($user['email'])) {
             continue;
         }
+        error_log('DEBUG: Checking user email: ' . ($user['email'] ?? 'missing') . ' against: ' . $email);
         if (strcasecmp((string) $user['email'], $email) === 0) {
             if (!isset($user['id']) || (string) $user['id'] === '') {
                 $user['id'] = user_id_from_email((string) $user['email']);
             }
+            error_log('DEBUG: Found matching user: ' . json_encode($user['email'] ?? 'unknown'));
             return $user;
         }
     }
+    error_log('DEBUG: No matching user found for email: ' . $email);
     return null;
 }
 

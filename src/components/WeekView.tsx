@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, CareDayEvent, Handover, Availability } from '../lib/database.types';
+import type { Profile, CareAssignment, CareDayPreference, PreferenceLevel, CareDayEvent, Handover, Availability, ShortVisit } from '../lib/database.types';
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,7 +13,8 @@ import {
   AlertCircle,
   UserX,
   Calendar,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Dog
 } from 'lucide-react';
 import { DayDetailModal } from './DayDetailModal';
 import { listItems } from '../api/collections';
@@ -35,6 +36,7 @@ interface DayData {
   hasNotes: boolean;
   hasImportantNotes: boolean;
   absences: Availability[];
+  shortVisits: ShortVisit[];
   hasConflict: boolean;
 }
 
@@ -75,13 +77,14 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
       dateRange.push(`${year}-${month}-${day}`);
     }
 
-    const [assignments, preferences, events, handovers, notes, absences] = await Promise.all([
+    const [assignments, preferences, events, handovers, notes, absences, visits] = await Promise.all([
       listItems<CareAssignment>('care_assignments', { date: dateRange }),
       listItems<CareDayPreference>('care_day_preferences', { date: dateRange }),
       listItems<CareDayEvent>('care_day_events', { date: dateRange }),
       listItems<Handover>('handovers', { date: dateRange }),
       listItems<{ date: string; is_important: boolean }>('care_day_notes', { date: dateRange }),
       listItems<Availability>('availability', { date: dateRange, type: 'unavailable' }),
+      listItems<ShortVisit>('short_visits', { date: dateRange }),
     ]);
 
     const daysData: DayData[] = dateRange.map(date => {
@@ -103,6 +106,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
         hasNotes: (notes || []).some(n => n.date === date),
         hasImportantNotes: (notes || []).some(n => n.date === date && (n as any).is_important),
         absences: dayAbsences,
+        shortVisits: (visits || []).filter(v => (v as any).date === date),
         hasConflict
       };
     });
@@ -131,6 +135,23 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
     return <Icon className="w-4 h-4" />;
   };
 
+  const formatTime = (time: string | null | undefined) => {
+    if (!time) return '';
+    return String(time).substring(0, 5);
+  };
+
+  const MarqueeOrText = ({ text }: { text: string }) => {
+    const clean = String(text || '');
+    const isLongText = clean.length > 18;
+    return isLongText ? (
+      <div className="marquee">
+        <span>{clean}</span>
+      </div>
+    ) : (
+      <span>{clean}</span>
+    );
+  };
+
   const formatWeekRange = () => {
     if (weekDays.length === 0) return '';
     const start = new Date(weekDays[0].date + 'T12:00:00');
@@ -140,36 +161,41 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={previousWeek}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
-          >
-            <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
-          </button>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {formatWeekRange()}
-            </h2>
+      <div className="sm:static sticky top-0 z-20 -mx-4 px-4 py-3 sm:py-0 bg-white/85 dark:bg-slate-950/85 backdrop-blur border-b border-slate-200/70 dark:border-slate-800/70 sm:border-b-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <button
+              onClick={previousWeek}
+              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
+            >
+              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+            </button>
+
+            <div className="flex-1 min-w-0 flex items-center justify-center sm:justify-start gap-2">
+              <Calendar className="w-5 h-5 text-slate-600 dark:text-slate-300 flex-shrink-0" />
+              <h2 className="text-base sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
+                {formatWeekRange()}
+              </h2>
+            </div>
+
+            <button
+              onClick={nextWeek}
+              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
+            >
+              <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+            </button>
           </div>
+
           <button
-            onClick={nextWeek}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gradient-to-br hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-800 dark:hover:to-slate-700 transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 surface"
+            onClick={thisWeek}
+            className="btn-secondary text-sm w-full sm:w-auto"
           >
-            <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+            Diese Woche
           </button>
         </div>
-        <button
-          onClick={thisWeek}
-          className="btn-secondary text-sm"
-        >
-          Diese Woche
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {weekDays.map((day) => {
           const dayDate = new Date(day.date + 'T12:00:00');
           const isToday = new Date().toDateString() === dayDate.toDateString();
@@ -180,96 +206,171 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
           const otherProfile = profiles.find(p => p.id !== currentProfile.id);
           const otherPreference = otherProfile ? day.preferences[otherProfile.id] : null;
 
+          const getTileBackgroundClass = () => {
+            if (day.hasConflict) return 'ring-2 ring-inset ring-red-400 bg-red-50 dark:bg-red-950/30';
+            if (day.handover) return 'surface hover:bg-slate-50 hover:shadow-sm dark:hover:bg-slate-900/60';
+            if (assignedProfile) return profileColorClass(assignedProfile, 'tile');
+            if (isWeekend) return 'bg-slate-50/50 dark:bg-slate-950/30';
+            return 'surface hover:bg-slate-50 hover:shadow-sm dark:hover:bg-slate-900/60';
+          };
+
           return (
             <div
               key={day.date}
               onClick={() => setSelectedDate(day.date)}
-              className={`
-                relative min-h-[220px] rounded-2xl p-4 cursor-pointer transition-all duration-200 border-2 card-hover
-                ${isWeekend ? 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/50 dark:to-slate-900/40' : 'surface'}
-                ${isToday ? 'border-blue-500 shadow-xl shadow-blue-500/20' : 'border-slate-200 dark:border-slate-700'}
-                ${day.hasConflict ? 'border-red-400' : ''}
-              `}
+              className={`relative min-h-[240px] sm:min-h-[260px] rounded-2xl p-4 sm:p-3 cursor-pointer transition-all duration-200 border-2 card-hover ${getTileBackgroundClass()} ${
+                isToday
+                  ? '!border-blue-500 ring-2 ring-inset ring-blue-400/60 shadow-xl shadow-blue-500/20'
+                  : 'border-slate-200 dark:border-slate-700'
+              }`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className={`text-xs font-bold uppercase tracking-wide mb-1 ${isToday ? 'text-blue-600' : 'text-slate-500 dark:text-slate-400'}`}>
-                    {dayDate.toLocaleDateString('de-DE', { weekday: 'short' })}
-                  </div>
-                  <div className={`text-3xl font-bold ${isToday ? 'text-blue-600' : 'text-slate-900 dark:text-slate-100'}`}>
-                    {dayDate.getDate()}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1 items-end">
-                  {isToday && (
-                    <div className="px-2 py-1 rounded-full bg-blue-500 text-white text-xs font-bold">
-                      Heute
-                    </div>
-                  )}
-                  {day.handover && (
-                    <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-950/30">
-                      <ArrowRightLeft className="w-3.5 h-3.5 text-orange-600 dark:text-orange-300" />
-                    </div>
-                  )}
-                </div>
-              </div>
+              {day.handover && !day.hasConflict && (() => {
+                const fromProfile = resolveProfileById(profiles, day.handover!.from_user_id);
+                const toProfile = resolveProfileById(profiles, day.handover!.to_user_id);
+                const fromColor = fromProfile ? profileColorClass(fromProfile, 'soft') : 'bg-slate-50/60 dark:bg-slate-950/25';
+                const toColor = toProfile ? profileColorClass(toProfile, 'soft') : 'bg-slate-50/60 dark:bg-slate-950/25';
 
-              {day.hasImportantNotes && (
-                <div className="mb-2">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-100 to-red-200 dark:from-red-950/30 dark:to-red-900/20 text-red-700 dark:text-red-200 text-xs font-bold shadow-sm border border-red-200/60 dark:border-red-900/40">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    Wichtig!
+                return (
+                  <>
+                    <div
+                      className={`absolute inset-0 ${fromColor} pointer-events-none`}
+                      style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+                    ></div>
+                    <div
+                      className={`absolute inset-0 ${toColor} pointer-events-none`}
+                      style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
+                    ></div>
+                  </>
+                );
+              })()}
+
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <div className={`text-xs font-bold uppercase tracking-wide ${isToday ? 'text-blue-600' : 'text-slate-500 dark:text-slate-400'}`}>
+                      {dayDate.toLocaleDateString('de-DE', { weekday: 'short' })}
+                    </div>
+                    <div className={`text-xl font-bold ${isToday ? 'text-blue-600' : 'text-slate-900 dark:text-slate-100'}`}>
+                      {dayDate.getDate()}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-1.5 flex-wrap justify-end">
+                    {day.hasImportantNotes && (
+                      <div
+                        className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-950/35 flex items-center justify-center cursor-help"
+                        title="Wichtige Notizen vorhanden"
+                      >
+                        <AlertCircle className="w-3 h-3 text-red-600 dark:text-red-200" />
+                      </div>
+                    )}
+                    {day.hasNotes && !day.hasImportantNotes && (
+                      <div
+                        className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help"
+                        title="Notizen vorhanden"
+                      >
+                        <StickyNote className="w-3 h-3 text-blue-600 dark:text-blue-200" />
+                      </div>
+                    )}
+                    {day.handover && (
+                      <div
+                        className="w-4 h-4 rounded-full bg-orange-100 dark:bg-orange-950/35 flex items-center justify-center cursor-help"
+                        title={`Übergabe um ${day.handover.time || '12:00'}`}
+                      >
+                        <ArrowRightLeft className="w-3 h-3 text-orange-600 dark:text-orange-200" />
+                      </div>
+                    )}
+                    {day.events.length > 0 && (
+                      <div
+                        className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-950/35 flex items-center justify-center cursor-help"
+                        title={`${day.events.length} Ereignis(se)`}
+                      >
+                        <Home className="w-3 h-3 text-blue-600 dark:text-blue-200" />
+                      </div>
+                    )}
+                    {day.shortVisits.length > 0 && (
+                      <div
+                        className="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center cursor-help"
+                        title={`${day.shortVisits.length} Kurzbesuch(e)`}
+                      >
+                        <Dog className="w-3 h-3 text-slate-600 dark:text-slate-200" />
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
 
-              {day.absences.length > 0 && (
-                <div className="mb-3 space-y-1.5">
-                  {day.absences.map((absence, idx) => {
-                    const profile = resolveProfileById(profiles, absence.user_id);
+                <div className="flex items-start gap-1.5 flex-wrap mb-2">
+                {day.handover ? (
+                  (() => {
+                    const involvedIds = [
+                      day.handover?.from_user_id,
+                      day.handover?.to_user_id,
+                      day.handover?.brings_user_id,
+                      day.handover?.picks_up_user_id
+                    ].filter(Boolean) as string[];
+
+                    const unique = new Map<string, Profile>();
+                    for (const id of involvedIds) {
+                      const p = resolveProfileById(profiles, id);
+                      if (p) unique.set(p.id, p);
+                    }
+                    const involvedProfiles = Array.from(unique.values());
+
                     return (
-                      <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 text-xs font-medium border border-amber-200 dark:border-amber-900/40">
-                        <UserX className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span className="truncate">{profile?.name} nicht da</span>
+                      <div className="flex items-center gap-1 flex-nowrap">
+                        {involvedProfiles.map((profile) => (
+                          <div
+                            key={profile.id}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0 cursor-help ${profileColorClass(profile, 'solid')}`}
+                            title={`Übergabe: ${profile.name}`}
+                          >
+                            {profile.name.charAt(0)}
+                          </div>
+                        ))}
                       </div>
                     );
-                  })}
-                </div>
-              )}
-
-              {assignedProfile ? (
-                <div
-                  className={`mb-3 p-3 rounded-xl shadow-sm transition-all border-2 ${
-                    day.hasConflict
-                      ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-300'
-                      : `${profileColorClass(assignedProfile, 'tile')} border-slate-200 dark:border-slate-700`
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${day.hasConflict ? 'bg-red-500' : profileColorClass(assignedProfile, 'solid')}`}>
-                      <Home className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className={`font-bold text-sm ${day.hasConflict ? 'text-red-900' : 'text-slate-900 dark:text-slate-100'}`}>
-                        {assignedProfile.name}
-                      </div>
-                      {day.hasConflict && (
-                        <div className="text-xs text-red-700 font-semibold">Konflikt!</div>
-                      )}
-                    </div>
+                  })()
+                ) : assignedProfile ? (
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm flex-shrink-0 cursor-help ${profileColorClass(assignedProfile, 'solid')}`}
+                    title={`Betreuer: ${assignedProfile.name}`}
+                  >
+                    {assignedProfile.name.charAt(0)}
                   </div>
-                </div>
-              ) : (
-                <div className="mb-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-900/40 border-2 border-dashed border-slate-300 dark:border-slate-600">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 text-center font-medium">Noch nicht eingeteilt</div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Nicht eingeteilt</div>
+                )}
+
+                {day.handover && (
+                  (() => {
+                    const createdById = (day.handover as any)?.created_by as string | undefined;
+                    const creator = createdById ? resolveProfileById(profiles, createdById) : null;
+                    const bubbleClass = creator
+                      ? `${profileColorClass(creator, 'solid')} text-white dark:brightness-125 dark:saturate-125 dark:ring-1 dark:ring-white/10`
+                      : 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-100 dark:ring-1 dark:ring-white/10';
+
+                    return (
+                      <div
+                        className={`flex items-center justify-center gap-1 text-xs px-2 py-1 ${bubbleClass} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap`}
+                        title={`Übergabe um ${(day.handover.time || '12:00').substring(0, 5)}`}
+                      >
+                        {(() => {
+                          const t = String(day.handover?.time || '12:00');
+                          const hh = t.substring(0, 2);
+                          const h = Number.parseInt(hh, 10);
+                          return Number.isFinite(h) ? `${h} Uhr` : (t || '12:00').substring(0, 5);
+                        })()}
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
 
               {(currentProfilePref || otherPreference) && (
-                <div className="flex flex-wrap gap-1.5 mb-3">
+                <div className="flex flex-wrap gap-1 mb-2 sm:mb-3">
                   {currentProfilePref && (
                     <div
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg shadow-sm ${PREFERENCE_CONFIG[currentProfilePref.preference_level].color}`}
+                      className={`inline-flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-sm ${PREFERENCE_CONFIG[currentProfilePref.preference_level].color}`}
                       title={`${currentProfile.name}: ${PREFERENCE_CONFIG[currentProfilePref.preference_level].label}`}
                     >
                       {getPreferenceIcon(currentProfilePref.preference_level)}
@@ -278,7 +379,7 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
                   )}
                   {otherPreference && (
                     <div
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg shadow-sm ${PREFERENCE_CONFIG[otherPreference.preference_level].color}`}
+                      className={`inline-flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-sm ${PREFERENCE_CONFIG[otherPreference.preference_level].color}`}
                       title={`${otherProfile?.name}: ${PREFERENCE_CONFIG[otherPreference.preference_level].label}`}
                     >
                       {getPreferenceIcon(otherPreference.preference_level)}
@@ -288,27 +389,132 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
                 </div>
               )}
 
-              {day.events.length > 0 && (
-                <div className="space-y-1">
-                  {day.events.slice(0, 2).map((event) => (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 truncate">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
-                      <span className="truncate font-medium">{event.title}</span>
-                    </div>
-                  ))}
-                  {day.events.length > 2 && (
-                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">+{day.events.length - 2} weitere</div>
-                  )}
+              {day.absences.length > 0 && (
+                <div className="flex flex-col gap-1 mb-2">
+                  {day.absences.map((absence) => {
+                    const absentProfile = resolveProfileById(profiles, absence.user_id);
+                    const tooltipText = !absence.is_full_day && (absence as any).start_time && (absence as any).end_time
+                      ? `${absentProfile?.name} abwesend: ${formatTime((absence as any).start_time)} - ${formatTime((absence as any).end_time)}`
+                      : `${absentProfile?.name} ganztägig abwesend`;
+                    return absentProfile ? (
+                      <div
+                        key={absence.id}
+                        className={`flex items-center gap-1 text-xs px-2 py-1 ${profileColorClass(absentProfile, 'solid')} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap`}
+                        title={tooltipText}
+                      >
+                        <UserX className="w-3 h-3 flex-shrink-0" />
+                        <span className="opacity-90 truncate flex-1">
+                          <span className="px-2 sm:px-0 inline-block">
+                            {(absence as any).is_full_day ? (
+                              <MarqueeOrText text="ganztägig abwesend" />
+                            ) : (
+                              <MarqueeOrText text={`${formatTime((absence as any).start_time)}-${formatTime((absence as any).end_time)}`} />
+                            )}
+                          </span>
+                        </span>
+                      </div>
+                    ) : null;
+                  })}
                 </div>
               )}
 
-              {day.hasNotes && !day.hasImportantNotes && (
-                <div className="absolute bottom-3 right-3">
-                  <div className="p-1.5 rounded-lg bg-yellow-100 dark:bg-yellow-950/35">
-                    <StickyNote className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-200" />
-                  </div>
+              {day.events.length > 0 && (
+                <div className="flex flex-col gap-1 mb-2">
+                  {day.events.map((event) => {
+                    const author = resolveProfileById(profiles, (event as any).created_by);
+                    const when = formatTime((event as any).time);
+                    const label = `${when ? when + ' ' : ''}${event.title || ''}`.trim();
+                    return author ? (
+                      <div
+                        key={(event as any).id || `${day.date}-${event.title}`}
+                        className={`flex items-center gap-1 text-xs px-2 py-1 ${profileColorClass(author, 'solid')} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap`}
+                        title={`${author.name}${when ? `: ${when}` : ''}${event.title ? ` ${event.title}` : ''}`.trim()}
+                      >
+                        <Home className="w-3 h-3 flex-shrink-0" />
+                        <span className="opacity-90 truncate flex-1">
+                          <span className="px-2 sm:px-0 inline-block">
+                            <MarqueeOrText text={label} />
+                          </span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div
+                        key={(event as any).id || `${day.date}-${event.title}`}
+                        className="flex items-center gap-1 text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 rounded-lg font-medium leading-none w-full overflow-hidden whitespace-nowrap"
+                        title={label}
+                      >
+                        <Home className="w-3 h-3 flex-shrink-0" />
+                        <span className="opacity-90 truncate flex-1">
+                          <span className="px-2 sm:px-0 inline-block">
+                            <MarqueeOrText text={label} />
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+
+                {day.shortVisits.length > 0 && (
+                  <div className="flex flex-col gap-1 mb-2">
+                    {day.shortVisits.map((visit) => {
+                      const visitor = resolveProfileById(profiles, (visit as any).visitor_id);
+                      const start = formatTime((visit as any).start_time);
+                      const end = formatTime((visit as any).end_time);
+                      const duration = (visit as any).duration_minutes ? ` (${(visit as any).duration_minutes} Min.)` : '';
+                      const timeText = end ? `${start}-${end}` : `${start}${duration}`;
+                      const visitTypeLabels: Record<string, string> = {
+                        walk: '🐕',
+                        short_stay: '⏱️',
+                        vet_visit: '🏥',
+                        grooming: '✂️',
+                        playtime: '🎾',
+                        other: '📌'
+                      };
+                      const icon = visitTypeLabels[String((visit as any).visit_type || 'other')] || '📌';
+                      const tooltipText = visitor
+                        ? `${visitor.name}: ${timeText}`
+                        : timeText;
+
+                      return visitor ? (
+                        <div
+                          key={(visit as any).id || `${day.date}-${timeText}`}
+                          className={`flex items-center gap-1 text-xs px-2 py-1 ${profileColorClass(visitor, 'solid')} rounded-lg font-medium cursor-help leading-none w-full overflow-hidden whitespace-nowrap`}
+                          title={tooltipText}
+                        >
+                          <span className="flex-shrink-0">{icon}</span>
+                          <span className="opacity-90 truncate flex-1">
+                            <span className="px-2 sm:px-0 inline-block">
+                              <MarqueeOrText text={timeText} />
+                            </span>
+                          </span>
+                        </div>
+                      ) : (
+                        <div
+                          key={(visit as any).id || `${day.date}-${timeText}`}
+                          className="flex items-center gap-1 text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 rounded-lg font-medium leading-none w-full overflow-hidden whitespace-nowrap"
+                          title={tooltipText}
+                        >
+                          <span className="flex-shrink-0">{icon}</span>
+                          <span className="opacity-90 truncate flex-1">
+                            <span className="px-2 sm:px-0 inline-block">
+                              <MarqueeOrText text={timeText} />
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {day.hasNotes && !day.hasImportantNotes && (
+                  <div className="absolute bottom-2 right-2">
+                    <div className="p-1 rounded-lg bg-yellow-100 dark:bg-yellow-950/35">
+                      <StickyNote className="w-3 h-3 text-yellow-600 dark:text-yellow-200" />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

@@ -5,7 +5,11 @@ type LogItem = {
   id: string;
   createdAt: number;
   text: string;
+  readAt?: number; // Wann der Eintrag gelesen wurde
 };
+
+// Event für das Zurücksetzen des Logbuch-Zählers
+const LOGBOOK_READ_EVENT = 'logbook-read';
 
 export function AssetsLogbook() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'ready'>('idle');
@@ -35,6 +39,34 @@ export function AssetsLogbook() {
   useEffect(() => {
     load();
   }, []);
+
+  // Wenn die Logbuch-Seite geladen wird, alle Einträge als gelesen markieren
+  useEffect(() => {
+    if (status === 'ready' && envelope && envelope.items.length > 0) {
+      const now = Date.now();
+      const hasUnreadItems = envelope.items.some(item => !item.readAt);
+      
+      if (hasUnreadItems) {
+        const updatedEnvelope: AssetEnvelope<LogItem> = {
+          ...envelope,
+          items: envelope.items.map(item => ({
+            ...item,
+            readAt: item.readAt || now
+          }))
+        };
+        
+        setEnvelope(updatedEnvelope);
+        
+        // Speichern und Event auslösen
+        saveAsset('logbook', updatedEnvelope).then(() => {
+          // Event auslösen, damit der Dashboard-Zähler zurückgesetzt wird
+          window.dispatchEvent(new CustomEvent(LOGBOOK_READ_EVENT));
+        }).catch(e => {
+          console.error('Fehler beim Markieren als gelesen:', e);
+        });
+      }
+    }
+  }, [status, envelope]);
 
   const addItem = async () => {
     if (!envelope) return;

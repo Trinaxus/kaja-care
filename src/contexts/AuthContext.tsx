@@ -15,6 +15,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearAuthStorage = () => {
+    localStorage.removeItem('currentProfile');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessRole');
+    localStorage.removeItem('userColor');
+  };
+
   useEffect(() => {
     const run = async () => {
       const savedProfile = localStorage.getItem('currentProfile');
@@ -62,9 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('currentProfile', JSON.stringify(nextProfile));
             localStorage.setItem('accessRole', user.accessRole || 'user');
             localStorage.setItem('userColor', user.color || 'blue');
+          } else {
+            // Token ist ungültig/abgelaufen oder Backend antwortet nicht wie erwartet.
+            // Wichtig: lokale Session-Daten löschen, damit kein altes Profil hängen bleibt.
+            clearAuthStorage();
+            setProfile(null);
           }
         } catch (e) {
           console.warn('Auth refresh failed:', e);
+          clearAuthStorage();
+          setProfile(null);
         }
       }
 
@@ -75,6 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const switchProfile = async (email: string, password: string) => {
+    // Verhindert, dass ein alter Token/Profil nach einem fehlgeschlagenen Login
+    // wieder als „aktiver User“ verwendet wird.
+    clearAuthStorage();
+    setProfile(null);
+
     const baseUrl = import.meta.env.VITE_SERVER_BASE_URL;
     if (!baseUrl) {
       throw new Error('Server URL fehlt (VITE_SERVER_BASE_URL)');
@@ -171,10 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = () => {
     setProfile(null);
-    localStorage.removeItem('currentProfile');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('accessRole');
-    localStorage.removeItem('userColor');
+    clearAuthStorage();
   };
 
   return (

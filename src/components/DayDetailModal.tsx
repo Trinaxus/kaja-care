@@ -270,6 +270,7 @@ export function DayDetailModal({ date, currentProfile, profiles, onClose, onUpda
         notes: handoverNotes || null,
         brings_user_id: bringsUserId || null,
         picks_up_user_id: picksUpUserId || null,
+        created_by: details.handover ? (details.handover as any).created_by : currentProfile.id,
         created_at: details.handover ? (details.handover as any).created_at : nowIso(),
         updated_at: nowIso(),
       };

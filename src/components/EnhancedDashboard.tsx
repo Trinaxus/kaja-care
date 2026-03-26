@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Profile, CareAssignment, Handover, Request, Message, CareDayPreference, CareDayNote, CareDayEvent } from '../lib/database.types';
+import type { Profile, CareAssignment, Handover, Message, CareDayPreference, CareDayNote, CareDayEvent } from '../lib/database.types';
 import type { LucideIcon } from 'lucide-react';
 import { fetchUsers } from '../api/users';
 import { listItems } from '../api/collections';
@@ -7,7 +7,6 @@ import {
   PawPrint,
   Calendar,
   ArrowRightLeft,
-  Bell,
   LogOut,
   BookOpen,
   TrendingUp,
@@ -27,7 +26,6 @@ import {
 } from 'lucide-react';
 import { CalendarView } from './CalendarView';
 import { WeekView } from './WeekView';
-import { RequestsPanel } from './RequestsPanel';
 import { LogBook } from './LogBook';
 import { NotificationsPanel } from './NotificationsPanel';
 import { ProfileSettings } from './ProfileSettings';
@@ -46,9 +44,8 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
   const [effectiveCurrentProfile, setEffectiveCurrentProfile] = useState<Profile | null>(null);
   const [todayAssignment, setTodayAssignment] = useState<CareAssignment | null>(null);
   const [nextHandover, setNextHandover] = useState<Handover | null>(null);
-  const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [unplannedDays, setUnplannedDays] = useState<number>(0);
-  const [activeView, setActiveView] = useState<'calendar' | 'requests' | 'expenses' | 'logbook' | 'notifications'>('calendar');
+  const [activeView, setActiveView] = useState<'calendar' | 'expenses' | 'logbook' | 'notifications'>('calendar');
   const [calendarMode, setCalendarMode] = useState<'month' | 'week'>('month');
   const [careStats, setCareStats] = useState({ martin: 0, lisa: 0, fairness: 100, preferenceScore: 0 });
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -59,6 +56,18 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const [isFullscreen, setIsFullscreen] = useState(() => Boolean(document.fullscreenElement));
   const [loadError, setLoadError] = useState<string>('');
+
+  const logbookLastSeenKey = `logbookLastSeenAt:${String(currentProfile?.id || '')}`;
+
+  // Logbuch-Zähler zurücksetzen, wenn Logbuch gelesen wird
+  useEffect(() => {
+    const handleLogbookRead = () => {
+      setNewLogbookCount(0);
+    };
+
+    window.addEventListener('logbook-read', handleLogbookRead);
+    return () => window.removeEventListener('logbook-read', handleLogbookRead);
+  }, []);
   const toast = useToast();
 
   const toggleTheme = () => {
@@ -92,22 +101,31 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
   }, []);
 
   useEffect(() => {
+    if (activeView === 'logbook') {
+      localStorage.setItem(logbookLastSeenKey, new Date().toISOString());
+      setNewLogbookCount(0);
+    }
+  }, [activeView, logbookLastSeenKey]);
+
+  useEffect(() => {
     if (profiles.length > 0) {
       calculateCareStats();
     }
   }, [profiles]);
 
-  const loadDashboardData = async () => {
-    setIsLoading(true);
+  const loadDashboardData = async (opts?: { background?: boolean }) => {
+    const background = Boolean(opts?.background);
+    if (!background) {
+      setIsLoading(true);
+    }
     try {
       setLoadError('');
       const today = new Date().toISOString().split('T')[0];
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      const [users, requests, todayAssignments, todayHandovers] = await Promise.all([
+      const [users, todayAssignments, todayHandovers] = await Promise.all([
         fetchUsers(),
-        listItems<Request>('requests'),
         listItems<CareAssignment>('care_assignments', { date: today }),
         listItems<Handover>('handovers', { date: today })
       ]);
@@ -166,8 +184,6 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
         setTodayAssignment(todayAssignmentRow);
       }
 
-      setPendingRequests(requests.filter((r) => r.status === 'pending'));
-
       const allHandovers = await listItems<Handover>('handovers');
       const candidateHandovers = allHandovers
         .filter((h) => (h.date || '') >= today)
@@ -206,7 +222,17 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
 
       const allMessages = await listItems<Message>('messages');
       const canonicalId = resolved?.id || currentProfile.id;
-      const myUnread = allMessages.filter((m) => m.to_profile_id === canonicalId && !m.is_read);
+      let archivedSet = new Set<string>();
+      try {
+        const raw = localStorage.getItem(`archivedMessages:${String(canonicalId || '')}`) || '[]';
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          archivedSet = new Set(parsed.map((v) => String(v)));
+        }
+      } catch {
+        archivedSet = new Set();
+      }
+      const myUnread = allMessages.filter((m) => m.to_profile_id === canonicalId && !m.is_read && !archivedSet.has(m.id));
       setUnreadMessagesCount(myUnread.length);
 
       const oneDayAgo = new Date();
@@ -217,16 +243,21 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
         listItems<CareDayEvent>('care_day_events')
       ]);
 
-      const recentNotes = notes.filter((n) => String(n.created_at || '') >= oneDayAgo.toISOString());
-      const recentEvents = events.filter((e) => String(e.created_at || '') >= oneDayAgo.toISOString());
+      const sinceIso = localStorage.getItem(logbookLastSeenKey) || '';
+      const since = sinceIso ? new Date(sinceIso) : oneDayAgo;
+      const sinceStr = since.toISOString();
+      const unreadNotes = notes.filter((n) => String(n.created_at || '') > sinceStr);
+      const unreadEvents = events.filter((e) => String(e.created_at || '') > sinceStr);
 
-      setNewLogbookCount(recentNotes.length + recentEvents.length);
+      setNewLogbookCount(unreadNotes.length + unreadEvents.length);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       setLoadError(msg);
       toast.error('Fehler beim Laden der Daten');
     } finally {
-      setIsLoading(false);
+      if (!background) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -304,11 +335,10 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
   const todayCaretaker = todayAssignment ? getProfileById(todayAssignment.caretaker_id) : null;
   const otherProfile = profiles.find(p => p.id !== canonicalProfile?.id);
 
-  type NavItem = { id: 'calendar' | 'requests' | 'expenses' | 'logbook' | 'notifications'; label: string; icon: LucideIcon; badge?: number };
+  type NavItem = { id: 'calendar' | 'expenses' | 'logbook' | 'notifications'; label: string; icon: LucideIcon; badge?: number };
 
   const navItems: NavItem[] = [
     { id: 'calendar', label: 'Kalender', icon: Calendar },
-    { id: 'requests', label: 'Anfragen', icon: Bell, badge: pendingRequests.length },
     { id: 'expenses', label: 'Ausgaben', icon: DollarSign },
     { id: 'logbook', label: 'Logbuch', icon: BookOpen, badge: newLogbookCount },
     { id: 'notifications', label: 'Nachrichten', icon: MessageSquare, badge: unreadMessagesCount },
@@ -446,32 +476,6 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
           </button>
 
           <button
-            onClick={() => setActiveView('requests')}
-            className={`surface rounded-xl shadow-sm p-4 sm:p-5 text-left hover:shadow-md transition-all ${
-              pendingRequests.length > 0 ? 'ring-2 ring-yellow-400' : ''
-            }`}
-          >
-            <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
-              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
-                pendingRequests.length > 0 ? 'bg-yellow-100 dark:bg-yellow-950/35' : 'bg-green-100 dark:bg-emerald-950/30'
-              }`}>
-                <Bell className={`w-4.5 h-4.5 sm:w-5 sm:h-5 ${
-                  pendingRequests.length > 0 ? 'text-yellow-600 dark:text-yellow-200' : 'text-green-600 dark:text-emerald-200'
-                }`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-500 uppercase font-medium tracking-wide">Offene Anfragen</p>
-                <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
-                  {pendingRequests.length}
-                </p>
-              </div>
-            </div>
-            {pendingRequests.length > 0 && (
-              <p className="text-xs text-yellow-700 dark:text-yellow-200 font-medium">Benötigt Antwort</p>
-            )}
-          </button>
-
-          <button
             onClick={() => setActiveView('calendar')}
             className={`surface rounded-xl shadow-sm p-4 sm:p-5 text-left hover:shadow-md transition-all ${
               unplannedDays > 5 ? 'ring-2 ring-red-400' : ''
@@ -590,12 +594,14 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
 
         {activeView === 'calendar' && (
           <div className="sm:hidden -mx-3">
-            <div className="surface border-y border-slate-200 dark:border-slate-700">
+            <div className="surface">
               <div className="flex overflow-x-auto scrollbar-hide">
                 {navItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveView(item.id as any)}
+                    title={item.label}
+                    aria-label={item.label}
                     className={`relative flex-1 min-w-[80px] px-3 py-3 font-semibold text-sm transition-all duration-200 ${
                       activeView === item.id
                         ? 'text-blue-600 dark:text-blue-400 surface'
@@ -652,7 +658,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                   profiles={profiles}
                   currentProfile={canonicalProfile}
                   onUpdate={() => {
-                    loadDashboardData();
+                    loadDashboardData({ background: true });
                     calculateCareStats();
                     setSelectedHandoverDate(null);
                   }}
@@ -664,7 +670,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                   profiles={profiles}
                   currentProfile={canonicalProfile}
                   onUpdate={() => {
-                    loadDashboardData();
+                    loadDashboardData({ background: true });
                     calculateCareStats();
                   }}
                 />
@@ -738,7 +744,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                     profiles={profiles}
                     currentProfile={canonicalProfile}
                     onUpdate={() => {
-                      loadDashboardData();
+                      loadDashboardData({ background: true });
                       calculateCareStats();
                       setSelectedHandoverDate(null);
                     }}
@@ -750,20 +756,12 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
                     profiles={profiles}
                     currentProfile={canonicalProfile}
                     onUpdate={() => {
-                      loadDashboardData();
+                      loadDashboardData({ background: true });
                       calculateCareStats();
                     }}
                   />
                 )}
               </div>
-            )}
-            {activeView === 'requests' && (
-              <RequestsPanel
-                profiles={profiles}
-                currentProfile={canonicalProfile}
-                requests={pendingRequests}
-                onUpdate={loadDashboardData}
-              />
             )}
             {activeView === 'expenses' && (
               <ExpenseTracker
@@ -778,7 +776,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
               <NotificationsPanel
                 profiles={profiles}
                 currentProfile={canonicalProfile}
-                onUpdate={loadDashboardData}
+                onUpdate={() => loadDashboardData({ background: true })}
               />
             )}
           </div>
@@ -790,7 +788,7 @@ export function EnhancedDashboard({ currentProfile, onSwitchProfile }: Dashboard
           profile={canonicalProfile}
           onClose={() => setShowProfileSettings(false)}
           onUpdate={() => {
-            loadDashboardData();
+            loadDashboardData({ background: true });
             setShowProfileSettings(false);
           }}
         />

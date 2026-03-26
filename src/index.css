@@ -212,7 +212,7 @@
 
   .marquee span {
     display: inline-block;
-    animation: marquee 3s linear infinite;
+    animation: marquee 8s linear infinite;
   }
 
   @keyframes marquee {
