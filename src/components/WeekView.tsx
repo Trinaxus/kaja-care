@@ -164,8 +164,8 @@ export function WeekView({ profiles, currentProfile, onUpdate }: WeekViewProps) 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="sm:static sticky top-0 z-20 -mx-4 px-4 py-3 sm:py-0 bg-white/85 dark:bg-slate-950/85 backdrop-blur border-b border-slate-200/70 dark:border-slate-800/70 sm:border-b-0">
+    <div className="space-y-6 overflow-x-hidden">
+      <div className="sm:static sticky top-0 z-20 w-full px-4 sm:px-0 py-3 sm:py-0 bg-white/85 dark:bg-slate-950/85 backdrop-blur border-b border-slate-200/70 dark:border-slate-800/70 sm:border-b-0">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="relative flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
             <button
